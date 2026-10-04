@@ -1,0 +1,38 @@
+---
+permalink: /sitemap.xml
+eleventyExcludeFromCollections: true
+pages:
+  - { loc: "/", priority: "1.0" }
+  - { loc: "/work/", priority: "0.9" }
+  - { loc: "/services/", priority: "0.9" }
+  - { loc: "/blog/", priority: "0.9" }
+  - { loc: "/process/", priority: "0.8" }
+  - { loc: "/about/", priority: "0.7" }
+  - { loc: "/work/juno/", priority: "0.8" }
+  - { loc: "/work/taraki/", priority: "0.8" }
+  - { loc: "/work/motive/", priority: "0.8" }
+  - { loc: "/work/ethr/", priority: "0.8" }
+  - { loc: "/work/rundet/", priority: "0.8" }
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  {%- for p in pages %}
+  <url>
+    <loc>{{ site.url }}{{ p.loc }}</loc>
+    <priority>{{ p.priority }}</priority>
+  </url>
+  {%- endfor %}
+  {%- for post in collections.posts %}
+  <url>
+    <loc>{{ site.url }}/blog/{{ post.data.slug }}/</loc>
+    <lastmod>{{ post.date | dateOnly }}</lastmod>
+    <priority>0.7</priority>
+  </url>
+  {%- endfor %}
+  {%- for tag in collections.blogTags %}
+  <url>
+    <loc>{{ site.url }}/blog/tag/{{ tag | tagSlug }}/</loc>
+    <priority>0.4</priority>
+  </url>
+  {%- endfor %}
+</urlset>

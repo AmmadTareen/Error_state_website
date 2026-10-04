@@ -1,0 +1,17 @@
+<a class="pcard" href="{{ post.url }}" data-tags="{{ post.data.tags | join(",") }}">
+  <span class="pcard__fig">
+    <img src="/blog/images/{{ post.data.slug }}/{{ post.data.cover }}" alt="{{ post.data.coverAlt }}" loading="lazy" decoding="async" width="1280" height="720">
+  </span>
+  <span class="pcard__body">
+    <span class="pcard__tags">
+      {%- for tag in post.data.tags %}<span class="pcard__tag">{{ tag }}</span>{% endfor -%}
+    </span>
+    <span class="pcard__ttl">{{ post.data.title }}</span>
+    <span class="pcard__d">{{ post.data.description }}</span>
+    <span class="pcard__meta">
+      <time datetime="{{ post.date | dateOnly }}">{{ post.date | humanDate }}</time>
+      <span class="post__sep" aria-hidden="true"></span>
+      <span>{{ post.data.readMins }} min read</span>
+    </span>
+  </span>
+</a>

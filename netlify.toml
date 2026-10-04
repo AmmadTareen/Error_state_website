@@ -1,7 +1,8 @@
-# Error State, static site. No build step: publish the folder as it is.
+# Error State, static site. Eleventy copies the hand written pages through
+# untouched and generates /blog from the Markdown in content/blog.
 [build]
-  publish = "."
-  command = ""
+  publish = "_site"
+  command = "npm run build"
 
 # Pretty URLs without the trailing index.html
 [[redirects]]
@@ -43,6 +44,18 @@
   for = "/media/*"
   [headers.values]
     Cache-Control = "public, max-age=604800, must-revalidate"
+
+# post media is written once and never edited in place
+[[headers]]
+  for = "/blog/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, must-revalidate"
+
+[[headers]]
+  for = "/blog/rss.xml"
+  [headers.values]
+    Content-Type = "application/rss+xml; charset=utf-8"
+    Cache-Control = "public, max-age=3600, must-revalidate"
 
 # the local preview helper is not part of the deployed site
 [[redirects]]

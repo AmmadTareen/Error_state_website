@@ -1,0 +1,31 @@
+---
+permalink: /blog/rss.xml
+eleventyExcludeFromCollections: true
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Error State</title>
+    <link>{{ site.url }}/blog/</link>
+    <description>Notes on design systems, SaaS product work and how we run an embedded design team.</description>
+    <language>en</language>
+    <atom:link href="{{ site.url }}/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    {%- if collections.posts.length %}
+    <lastBuildDate>{{ collections.posts[0].date | rfc822 }}</lastBuildDate>
+    {%- endif %}
+    {%- for post in collections.posts %}
+    <item>
+      <title>{{ post.data.title }}</title>
+      <link>{{ site.url }}/blog/{{ post.data.slug }}/</link>
+      <guid isPermaLink="true">{{ site.url }}/blog/{{ post.data.slug }}/</guid>
+      <pubDate>{{ post.date | rfc822 }}</pubDate>
+      <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">{{ post.data.author }}</dc:creator>
+      <description>{{ post.data.description }}</description>
+      {%- for tag in post.data.tags %}
+      <category>{{ tag }}</category>
+      {%- endfor %}
+      <content:encoded><![CDATA[{{ post.templateContent | absoluteMedia(post.data.slug) | safe }}]]></content:encoded>
+    </item>
+    {%- endfor %}
+  </channel>
+</rss>

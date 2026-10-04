@@ -568,3 +568,45 @@
     });
   });
 })();
+
+/* Blog index tag filter.
+   The chips are already links to /blog/tag/<tag>/, which is what works with
+   script off and what search engines follow. This only upgrades them to filter
+   in place, so the list never reloads. */
+(function () {
+  var list = document.getElementById("postList");
+  if (!list) return;
+  var bar = document.querySelector(".tagbar");
+  if (!bar) return;
+  var cards = [].slice.call(list.querySelectorAll(".pcard"));
+  var empty = document.getElementById("postEmpty");
+
+  function apply(tag, push) {
+    var shown = 0;
+    cards.forEach(function (card) {
+      var tags = (card.getAttribute("data-tags") || "").split(",");
+      var on = tag === "all" || tags.indexOf(tag) > -1;
+      card.hidden = !on;
+      if (on) shown++;
+    });
+    [].forEach.call(bar.querySelectorAll(".chip"), function (chip) {
+      chip.classList.toggle("is-on", chip.getAttribute("data-tag") === tag);
+    });
+    if (empty) empty.hidden = shown !== 0;
+    if (push) {
+      var url = tag === "all" ? "/blog/" : bar.querySelector('[data-tag="' + tag + '"]').getAttribute("href");
+      history.pushState({ tag: tag }, "", url);
+    }
+  }
+
+  bar.addEventListener("click", function (e) {
+    var chip = e.target.closest(".chip");
+    if (!chip) return;
+    e.preventDefault();
+    apply(chip.getAttribute("data-tag"), true);
+  });
+
+  window.addEventListener("popstate", function (e) {
+    apply((e.state && e.state.tag) || "all", false);
+  });
+})();

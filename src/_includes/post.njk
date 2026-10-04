@@ -1,0 +1,69 @@
+---
+layout: base.njk
+ogType: article
+---
+<section class="section page-top post__top">
+  <div class="wrap">
+    <article class="post">
+
+      <header class="post__head">
+        <p class="eyebrow">{{ tags[0] or "writing" }}</p>
+        <h1 class="d1 post__title">{{ title }}</h1>
+        <p class="lede post__lede">{{ description }}</p>
+        <p class="post__meta">
+          <span>{{ author }}</span>
+          <span class="post__sep" aria-hidden="true"></span>
+          <time datetime="{{ page.date | dateOnly }}">{{ page.date | humanDate }}</time>
+          <span class="post__sep" aria-hidden="true"></span>
+          <span>{{ readMins }} min read</span>
+        </p>
+        <ul class="post__tags">
+          {%- for tag in tags %}
+          <li><a href="/blog/tag/{{ tag | tagSlug }}/">{{ tag }}</a></li>
+          {%- endfor %}
+        </ul>
+      </header>
+
+      {%- if cover %}
+      <figure class="post__cover">
+        <img src="{{ site.url }}/blog/images/{{ slug }}/{{ cover }}" alt="{{ coverAlt }}" width="1280" height="720" decoding="async">
+      </figure>
+      {%- endif %}
+
+      <div class="post__body">
+        {{ content | absoluteMedia(slug) | safe }}
+      </div>
+
+      {%- if originalUrl %}
+      <p class="post__origin">A version of this post also appears <a href="{{ originalUrl }}" rel="noopener">on Medium</a>.</p>
+      {%- endif %}
+
+    </article>
+  </div>
+</section>
+
+<section class="section cta">
+  <div class="wrap">
+    <p class="eyebrow">next step</p>
+    <h2 class="d2">Put this to work on your product</h2>
+    <p class="lede" style="max-width:56ch;margin:18px auto 0">Thirty minutes, and we tell you on the call if it is not a fit.</p>
+    <a class="btn btn--primary" href="/book/?from=blog" data-book="blog">Book a 30 minute call</a>
+  </div>
+</section>
+
+{%- set siblings = collections.posts | related(tags, page.url) -%}
+{%- if siblings.length %}
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="head" style="margin-bottom:clamp(26px,3vw,40px)">
+      <p class="eyebrow">keep reading</p>
+      <h2 class="d2">Related writing</h2>
+    </div>
+    <div class="plist plist--2">
+      {%- for post in siblings %}
+      {% include "card.njk" %}
+      {%- endfor %}
+    </div>
+  </div>
+</section>
+{%- endif %}

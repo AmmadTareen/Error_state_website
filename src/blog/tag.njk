@@ -1,0 +1,34 @@
+---
+layout: base.njk
+pagination:
+  data: collections.blogTags
+  size: 1
+  alias: tag
+eleventyComputed:
+  permalink: "/blog/tag/{{ tag | tagSlug }}/index.html"
+  title: "{{ tag }}"
+  metaTitle: "{{ tag }} | Error State blog"
+  description: "Posts tagged {{ tag }} from the Error State blog."
+---
+<section class="section page-top">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">blog</p>
+      <h1 class="d1">{{ tag }}</h1>
+      <p class="lede" style="margin-top:20px">{{ collections.posts | byTag(tag) | length }} post{% if (collections.posts | byTag(tag) | length) != 1 %}s{% endif %} under this tag.</p>
+    </div>
+
+    <nav class="tagbar" aria-label="Filter by tag">
+      <a class="chip" href="/blog/" data-tag="all">All</a>
+      {%- for t in collections.blogTags %}
+      <a class="chip{% if t == tag %} is-on{% endif %}" href="/blog/tag/{{ t | tagSlug }}/" data-tag="{{ t }}">{{ t }}</a>
+      {%- endfor %}
+    </nav>
+
+    <div class="plist">
+      {%- for post in collections.posts | byTag(tag) %}
+      {% include "card.njk" %}
+      {%- endfor %}
+    </div>
+  </div>
+</section>

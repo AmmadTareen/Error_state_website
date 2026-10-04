@@ -3,22 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Not found | Error State</title>
-<meta name="description" content="That page does not exist.">
+<title>{{ metaTitle or (title ~ " | Error State") }}</title>
+<meta name="description" content="{{ description }}">
 <meta name="theme-color" content="#F7F7F7">
-<link rel="canonical" href="https://errorstate.design/404.html">
-<meta property="og:title" content="Not found | Error State">
-<meta property="og:description" content="That page does not exist.">
-<meta property="og:url" content="https://errorstate.design/404.html">
-<meta property="og:type" content="website">
+<link rel="canonical" href="{{ site.url }}{{ canonical or page.url }}">
+<meta property="og:title" content="{{ metaTitle or (title ~ " | Error State") }}">
+<meta property="og:description" content="{{ description }}">
+<meta property="og:url" content="{{ site.url }}{{ canonical or page.url }}">
+<meta property="og:type" content="{{ ogType or "website" }}">
+{%- if ogImage %}
+<meta property="og:image" content="{{ ogImage | absoluteUrl }}">
+<meta property="og:image:alt" content="{{ ogImageAlt }}">
+{%- endif %}
 <meta name="twitter:card" content="summary_large_image">
+<link rel="alternate" type="application/rss+xml" title="Error State blog" href="{{ site.url }}/blog/rss.xml">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/assets/css/site.css">
-<meta name="robots" content="noindex,nofollow">
 <script src="/assets/js/theme.js"></script>
+{%- if schema %}
+<script type="application/ld+json">{{ schema | safe }}</script>
+{%- endif %}
 </head>
 <body>
 
@@ -36,7 +43,7 @@
       <a href="/work/">Work</a>
       <a href="/services/">Services</a>
       <a href="/process/">Process</a>
-      <a href="/blog/">Blog</a>
+      <a href="/blog/" aria-current="page">Blog</a>
       <a href="/about/">About</a>
     </nav>
     <button class="menu-btn" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
@@ -62,17 +69,7 @@
 </div>
 
 <main id="main">
-
-  <section class="section">
-    <div class="wrap oops">
-      <p class="code">404</p>
-      <h1 class="d2" style="max-width:22ch;margin:20px auto 0">You found one. This is the part we usually get hired to fix.</h1>
-      <div class="hero__cta" style="margin-top:32px">
-        <a class="btn btn--primary" href="/book/?from=404" data-book="404">Book a 30 minute call</a>
-        <a class="btn btn--ghost" href="/work/">Back to the work</a>
-      </div>
-    </div>
-  </section>
+{{ content | safe }}
 </main>
 
 <footer class="ftr">
