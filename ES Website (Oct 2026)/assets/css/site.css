@@ -1,0 +1,1118 @@
+/* ==========================================================================
+   Error State, light system
+   Structure follows the Verseo reference: pale ground, thin rules, bordered
+   panels holding white cards, bracketed eyebrows, large centred display type.
+   Black is the primary action. Red is the accent and nothing else.
+   ========================================================================== */
+
+/* Brand fonts. Drop Mont into /assets/fonts/ and uncomment to take over.
+@font-face{font-family:"Mont";src:url("/assets/fonts/Mont-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Mont";src:url("/assets/fonts/Mont-SemiBold.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Mont";src:url("/assets/fonts/Mont-Bold.woff2") format("woff2");font-weight:700;font-display:swap}
+*/
+
+/* Palette is the Error State ramp, pulled from Branding / colors in Figma.
+   Red-50 #E51A1A is the brand red. On a pale ground it measures 4.4:1, which
+   fails AA for text, so light mode uses Red-60 and dark mode uses Red-40.
+   The brand red still appears at full strength in fills and large marks. */
+:root{
+  color-scheme:light;
+
+  --bg:#F7F7F7;          /* Grey-3  */
+  --surface:#FFFFFF;     /* White-100 */
+  --line:#E3E3E3;        /* Grey-10 */
+  --line-soft:#F2F2F2;   /* Grey-5  */
+  --chip:#F2F2F2;        /* Grey-5  */
+  --chip-ink:#5E5E5E;    /* text on a chip, 5.8:1 there */
+  --red-fill:#BC1A1A;    /* a red that carries white text: 6.4:1 */
+  --skeleton:#EDEDED;
+  --ink:#171717;         /* Grey-90 */
+  --ink-2:#454545;       /* Grey-70 */
+  --ink-3:#5E5E5E;       /* Grey-60 */
+  --ink-mute:#919191;    /* Grey-40, non text only */
+
+  --solid:#171717;       /* primary button ground */
+  --solid-ink:#FFFFFF;
+  --red:#BC1A1A;         /* Red-60, AA on the pale ground */
+  --red-pure:#E51A1A;    /* Red-50, fills and large marks */
+  --red-soft:rgba(229,26,26,.10);
+  --red-line:rgba(229,26,26,.30);   /* a tinted rule, not a text colour */
+  /* the one hue outside the red ramp. It exists only to mark the resolved
+     state in the comparison row. Emerald-700, 5.5:1 on the white card. */
+  --green:#047857;
+  --green-line:rgba(4,120,87,.34);
+
+  --scrim:247,247,247;   /* the colour washes fade toward */
+  --shadow:23,23,23;
+  --vis-1:#FBFBFB;
+  --vis-2:#EFF3F8;
+
+  /* illustration only, not part of the brand ramp */
+  --jam-purple:#8B3DFF;
+  --jam-blue:#BCD9F6;
+  --jam-yellow:#FFE7A3;
+  --jam-board:#FAFAFA;
+
+  --font:"Mont","Inter","Helvetica Neue",Arial,sans-serif;
+  /* BitTrip7 stays first for when the brand file lands. JetBrains Mono is
+     the loaded fallback, then the platform's own code face. */
+  --font-accent:"BitTrip7","JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --header-h:84px;
+  --gutter:clamp(20px,3.4vw,44px);
+  --max:1600px;
+  --rail:clamp(0px,9vw,180px);   /* sets the text measure, nothing is drawn on it */
+  --r:14px;
+  --btn-r:9px;
+  --section-y:clamp(72px,9vw,132px);
+}
+
+[data-theme="dark"]{
+  color-scheme:dark;
+
+  --bg:#000000;          /* Black-100 */
+  --surface:#171717;     /* Grey-90 */
+  --line:#2E2E2E;        /* Grey-80 */
+  --line-soft:#242424;
+  --chip:#2E2E2E;        /* Grey-80 */
+  --chip-ink:#ABABAB;    /* Grey-30, 5.9:1 on the chip where Grey-40 misses */
+  /* Red-40 is too light to carry white text (4.0:1), so the selected chip
+     drops to Red-50, which clears AA at 4.7:1 */
+  --red-fill:#E51A1A;
+  --skeleton:#2A2A2A;
+  --ink:#FCFCFC;         /* Grey-1  */
+  --ink-2:#ABABAB;       /* Grey-30 */
+  --ink-3:#919191;       /* Grey-40 */
+  --ink-mute:#5E5E5E;    /* Grey-60 */
+
+  --solid:#FCFCFC;
+  --solid-ink:#171717;
+  --red:#EC3C3C;         /* Red-40, AA on both the black ground and Grey-90 */
+  --red-pure:#E51A1A;
+  --red-soft:rgba(236,60,60,.14);
+  --red-line:rgba(236,60,60,.34);
+  --green:#10B981;                  /* Emerald-500, 7.1:1 on Grey-90 */
+  --green-line:rgba(16,185,129,.34);
+
+  --scrim:0,0,0;
+  --shadow:0,0,0;
+  --vis-1:#141414;
+  --vis-2:#0B0B0B;
+
+  --jam-purple:#8B3DFF;
+  --jam-blue:#2F4D6B;
+  --jam-yellow:#5E4A18;
+  --jam-board:#0E0E0E;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img,svg,video{display:block;max-width:100%}
+h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-0.035em;line-height:1.04;text-wrap:balance}
+p{margin:0}
+ul,ol{margin:0;padding:0;list-style:none}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+::selection{background:var(--red-pure);color:#fff}
+
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.skip{position:absolute;left:-9999px;background:var(--solid);color:var(--solid-ink);padding:12px 18px;z-index:100;border-radius:8px}
+.skip:focus{left:16px;top:16px}
+
+/* --- layout -------------------------------------------------------------- */
+.wrap{max-width:var(--max);margin:0 auto;padding-inline:max(var(--gutter),calc(var(--rail) + 32px))}
+.section{padding-block:var(--section-y);position:relative;z-index:2}
+.section--tight{padding-block:clamp(44px,5vw,72px)}
+.head{text-align:center;max-width:760px;margin:0 auto clamp(40px,5vw,72px)}
+.head p{margin-top:18px}
+
+/* --- type ---------------------------------------------------------------- */
+.eyebrow{
+  display:inline-flex;gap:0;align-items:baseline;
+  font-family:var(--font-accent);
+  font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--ink-3);margin-bottom:20px;
+}
+/* the brackets sit tight to the label, the way they would in a line of code */
+.eyebrow::before{content:"["; color:var(--red)}
+.eyebrow::after{content:"]"; color:var(--red)}
+.d1{font-size:clamp(38px,5vw,68px)}
+.d2{font-size:clamp(34px,4.6vw,62px)}
+.d3{font-size:clamp(21px,1.9vw,26px);letter-spacing:-0.025em}
+.d4{font-size:18px;letter-spacing:-0.02em;font-weight:600}
+.lede{font-size:clamp(16px,1.25vw,19px);color:var(--ink-2);line-height:1.5}
+.body{color:var(--ink-2);font-size:15px;line-height:1.6}
+.note{color:var(--ink-3);font-size:14px;font-style:italic}
+.cap{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.stat{font-size:clamp(44px,5vw,68px);font-weight:700;letter-spacing:-0.05em;line-height:1;
+  font-variant-numeric:tabular-nums}
+
+/* --- buttons -------------------------------------------------------------
+   One interaction model for every button.
+     rest    the colour as specified
+     hover   a white 16% veil lightens the ground, and an arrow slides in
+             from the right and fades up
+     press   a 2px stroke sitting 1px inside the edge
+   The veil and the stroke are the same pseudo element: it is inset by 1px so
+   its border lands exactly where the pressed stroke belongs. The arrow is
+   absolutely positioned inside the right padding, so nothing reflows on hover. */
+.btn{
+  --veil:rgba(255,255,255,.16);
+  --px:30px;                       /* resting side padding */
+  --arrow:15px;
+  --agap:8px;                      /* space between label and arrow */
+  --shift:calc((var(--arrow) + var(--agap)) / 2);
+  position:relative;isolation:isolate;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:600;padding:14px var(--px);border-radius:var(--btn-r);
+  border:1px solid transparent;white-space:nowrap;
+  transition:background-color .15s ease,color .15s ease,border-color .15s ease,
+             padding .18s cubic-bezier(.2,.7,.3,1);
+}
+/* On hover the label slides left by half the arrow's footprint, so the label
+   and the arrow together sit centred with equal space either side. Total
+   padding is unchanged, so the button never changes width. */
+.btn:hover,.btn:focus-visible{
+  padding-left:calc(var(--px) - var(--shift));
+  padding-right:calc(var(--px) + var(--shift));
+}
+.btn > *{position:relative;z-index:1}
+
+.btn::before{
+  content:"";position:absolute;inset:1px;z-index:0;pointer-events:none;
+  border-radius:calc(var(--btn-r) - 1px);
+  background:var(--veil);
+  border:2px solid transparent;
+  opacity:0;transition:opacity .16s ease,border-color .12s ease;
+}
+.btn:hover::before,.btn:focus-visible::before{opacity:1}
+.btn:active::before{opacity:1;border-color:currentColor}
+
+.btn::after{
+  content:"";position:absolute;top:50%;z-index:1;
+  right:calc(var(--px) - var(--shift));
+  width:var(--arrow);height:var(--arrow);margin-top:calc(var(--arrow) / -2);
+  pointer-events:none;
+  background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2012h15M13%205.5l6.5%206.5-6.5%206.5%22/%3E%3C/svg%3E") center/contain no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2012h15M13%205.5l6.5%206.5-6.5%206.5%22/%3E%3C/svg%3E") center/contain no-repeat;
+  opacity:0;transform:translateX(7px);
+  transition:opacity .18s ease,transform .18s cubic-bezier(.2,.7,.3,1);
+}
+.btn:hover::after,.btn:focus-visible::after{opacity:1;transform:translateX(0)}
+
+.btn--primary{background-color:var(--solid);color:var(--solid-ink)}
+.btn--ghost{background-color:var(--surface);border-color:var(--line);color:var(--ink)}
+.btn--ghost:hover{border-color:var(--ink)}
+/* a white veil cannot read on a button that is already near white, so those
+   two cases carry the same 16% lift as a dark veil instead */
+.btn--ghost{--veil:rgba(23,23,23,.06)}
+[data-theme="dark"] .btn--ghost{--veil:rgba(255,255,255,.16)}
+[data-theme="dark"] .btn--primary{--veil:rgba(23,23,23,.06)}
+.btn--s{--px:24px;--arrow:13px;padding:11px var(--px);font-size:14px}
+
+/* no arrow, so no shift either */
+.btn--bare::after{content:none}
+.btn--bare:hover,.btn--bare:focus-visible{padding-left:var(--px);padding-right:var(--px)}
+
+/* --- header -------------------------------------------------------------- */
+.hdr{
+  position:sticky;top:0;z-index:50;height:var(--header-h);
+  background:rgba(var(--scrim),.95);   /* no backdrop blur: re-blurring the page under the header every frame was the costliest paint on scroll */
+  border-bottom:1px solid var(--line);
+}
+.hdr__in{--ctl:40px;                 /* the menu, the theme switch and the CTA all share it */
+  height:100%;display:flex;align-items:center;gap:24px;
+  max-width:var(--max);margin:0 auto;padding-inline:max(var(--gutter),calc(var(--rail) + 32px))}
+.hdr .btn--s{height:var(--ctl);padding-block:0}
+.brand{display:flex;align-items:center;white-space:nowrap}
+.brand__logo{height:30px;width:auto;display:block}
+.hdr .brand__logo{height:48px}
+.brand__mark{display:none;height:var(--ctl)}
+.brand .is-dark{display:none}
+[data-theme="dark"] .brand .is-light{display:none}
+[data-theme="dark"] .brand .is-dark{display:block}
+[data-theme="dark"] .brand .brand__mark.is-dark{display:none}
+.brand svg{flex:none}
+.nav{display:flex;gap:22px;margin-inline:auto}
+/* padding rather than a bare line box, so the target clears 24px */
+.nav a{font-size:15px;color:var(--ink-2);padding:8px 6px;border-radius:7px;transition:color .15s ease}
+.nav a:hover,.nav a[aria-current="page"]{color:var(--ink)}
+.menu-btn{display:none;width:var(--ctl);height:var(--ctl);flex:none;place-items:center;
+  border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink)}
+.menu-ico,.menu-ico::before,.menu-ico::after{display:block;width:16px;height:1.5px;background:currentColor;transition:transform .2s,opacity .2s}
+.menu-ico{position:relative}
+.menu-ico::before,.menu-ico::after{content:"";position:absolute;left:0}
+.menu-ico::before{top:-5px}
+.menu-ico::after{top:5px}
+.menu-btn[aria-expanded="true"] .menu-ico{background:transparent}
+.menu-btn[aria-expanded="true"] .menu-ico::before{transform:translateY(5px) rotate(45deg)}
+.menu-btn[aria-expanded="true"] .menu-ico::after{transform:translateY(-5px) rotate(-45deg)}
+.hide-xs{display:inline}
+.menu{display:none}
+
+/* --- hero ---------------------------------------------------------------- */
+.hero{position:relative;overflow:hidden;padding-top:clamp(56px,7vw,96px);padding-bottom:0;z-index:2}
+.hero__sky{position:absolute;left:0;right:0;top:0;height:100%;z-index:0}
+.hero__sky img,.hero__sky video{width:100%;height:100%;object-fit:cover}
+/* The plate is shot vivid. Its grade (saturate .7, brightness 1.05) is baked
+   into clouds.mp4, clouds.webm and clouds.jpg rather than applied as a CSS
+   filter, which had to be recomputed on every frame of the scrub. */
+.hero__sky::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,
+    rgba(var(--scrim),.95) 0%,
+    rgba(var(--scrim),.80) 18%,
+    rgba(var(--scrim),.44) 40%,
+    rgba(var(--scrim),.30) 58%,
+    rgba(var(--scrim),.66) 82%,
+    var(--bg) 100%)}
+.hero__grid{position:absolute;inset:0;z-index:0;opacity:.5;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:clamp(90px,9vw,150px) clamp(90px,9vw,150px);
+  mask-image:linear-gradient(180deg,#000 0%,transparent 72%);
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,transparent 72%)}
+.hero__in{position:relative;z-index:2;text-align:center;max-width:1080px;margin:0 auto}
+/* The plate moves as you scroll, so type legibility cannot depend on which
+   frame happens to be showing. This soft wash sits behind the text only. */
+.hero__in::before{content:"";position:absolute;left:50%;top:-14%;transform:translateX(-50%);
+  width:150%;height:140%;z-index:-1;pointer-events:none;
+  background:radial-gradient(58% 52% at 50% 44%,
+    rgba(var(--scrim),.93) 0%,rgba(var(--scrim),.74) 46%,rgba(var(--scrim),0) 78%)}
+.hero .lede{max-width:620px;margin:20px auto 0}
+.hero__cta{display:flex;gap:12px;justify-content:center;margin-top:34px;flex-wrap:wrap}
+.hero__mock{position:relative;z-index:2;margin-top:clamp(48px,6vw,84px)}
+
+/* the product mockup, drawn rather than screenshotted so it stays crisp */
+.mock{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px 16px 0 0;
+  box-shadow:0 30px 80px -40px rgba(var(--shadow),.28);overflow:hidden;
+}
+.mock__bar{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--line-soft)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.mock__url{margin-left:10px;height:22px;flex:1;max-width:280px;border:1px solid var(--line);border-radius:6px}
+.mock__body{display:grid;grid-template-columns:230px 1fr;min-height:300px}
+.mock__side{border-right:1px solid var(--line-soft);padding:18px}
+.mock__row{height:9px;border-radius:4px;background:var(--skeleton);margin-bottom:10px}
+.mock__row.w70{width:70%}.mock__row.w50{width:50%}.mock__row.w85{width:85%}
+.mock__chip{display:inline-block;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--chip);color:var(--ink-2);margin-bottom:16px}
+.mock__canvas{padding:22px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-content:start}
+.mock__foot{display:flex;align-items:center;gap:12px;padding:14px 18px;border-top:1px solid var(--line-soft)}
+.mock__sq{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);flex:none}
+.mock__foot .mock__sq:nth-of-type(1){margin-left:auto}
+.swatch{border:1px solid var(--line);border-radius:10px;height:62px;display:flex;align-items:center;justify-content:center}
+.swatch b{width:26px;height:26px;border-radius:7px;background:var(--skeleton);display:block}
+/* the two chips above the mock: the claim, and the control that proves it.
+   Separate objects, positioned as one row so they stay balanced. */
+.mock__hud{
+  position:absolute;left:50%;transform:translateX(-50%);top:-26px;z-index:3;
+  display:flex;gap:10px;align-items:center;
+  max-width:min(94vw,calc(100% - 24px));
+}
+.mock__float{
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 18px 40px -22px rgba(var(--shadow),.34);
+  padding:12px 16px;display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2);
+  line-height:1.4;min-width:0;
+}
+.mock__float b{font-weight:500;color:var(--ink)}
+.mock__float__t{white-space:nowrap}
+.tick{width:8px;height:8px;border-radius:2px;background:var(--red);flex:none;
+  align-self:center}
+.mock__float .tick{align-self:flex-start;margin-top:calc((1.4em - 8px) / 2)}
+
+/* --- the live token demo ------------------------------------------------
+   The callout does not just describe the change, it drives it. Picking a
+   colour rewrites one custom property on the mock and everything downstream
+   of that token follows, which is the whole pitch in one interaction. */
+.hero__mock{
+  --demo:var(--red-pure);
+  --demo-soft:rgba(229,26,26,.12);
+  --demo-ring:transparent;
+}
+.toks{
+  flex:none;display:flex;gap:7px;align-items:center;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 18px 40px -22px rgba(var(--shadow),.34);
+  padding:9px 11px;
+}
+.tok{
+  position:relative;width:24px;height:24px;flex:none;padding:0;cursor:pointer;
+  border-radius:50%;background:var(--c,var(--ink-mute));
+  box-shadow:inset 0 0 0 1px rgba(23,23,23,.14);
+  transition:transform .16s cubic-bezier(.2,.7,.3,1),box-shadow .16s ease;
+}
+.tok:hover{transform:scale(1.14)}
+.tok.is-on{box-shadow:inset 0 0 0 1px rgba(23,23,23,.14),0 0 0 2px var(--surface),0 0 0 4px var(--ink)}
+.tok:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.tok--pick{display:block;overflow:hidden;
+  background:conic-gradient(from .25turn,#E51A1A,#D97706,#059669,#2563EB,#7C3AED,#E51A1A)}
+.tok--pick input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);
+  opacity:0;cursor:pointer;border:0;padding:0;background:none}
+
+/* everything the token reaches. The mark on the chip is deliberately not in
+   this list: that dot is the Error State accent, and the mock below it is the
+   client's product. Keeping them separate is the point being made. */
+.swatch.is-on{border-color:var(--demo);background:var(--demo-soft)}
+.swatch.is-on b{background:var(--demo);box-shadow:inset 0 0 0 1px var(--demo-ring)}
+.mock__foot .mock__sq:last-child{border-color:var(--demo);background:var(--demo-soft)}
+
+/* --- marquee ------------------------------------------------------------- */
+.marquee{overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.marquee__track{display:flex;gap:clamp(38px,4.6vw,72px);align-items:center;width:max-content;animation:slide 44s linear infinite}
+.marquee img{width:auto;display:block;flex:none}
+/* Normalising by height alone lets a pure wordmark like Rundet dominate a
+   lockup like Taraki. These are tuned so each reads at the same weight. */
+.lg--motive{height:22px}
+.lg--rundet{height:19px}
+.lg--taraki{height:25px}
+.lg--neblo{height:24px}
+/* the supplied files are the light versions. On the dark ground they are
+   flattened to white and held back to 80%, so no single client logo shouts. */
+[data-theme="dark"] .marquee img{filter:brightness(0) invert(1);opacity:.8}
+.marquee span{font-size:clamp(17px,1.5vw,21px);font-weight:600;letter-spacing:-.01em;color:var(--ink-mute);white-space:nowrap}
+@keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* --- panels and cards ---------------------------------------------------- */
+.panel{border:1px solid var(--line);border-radius:var(--r);background:transparent;overflow:hidden}
+.panel--grid{display:grid}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(22px,2.2vw,30px)}
+.card--flat{background:transparent;border:0;border-radius:0}
+.card h3{margin-bottom:12px}
+.card .body{margin-bottom:10px}
+
+/* comparison, a scroll rail at every width -------------------------------
+   Three cards side by side on a wide screen and a swipe on a narrow one, from
+   the same markup. The rail scrolls natively, so the smooth scroll script
+   leaves it alone. */
+/* Three across on a wide screen, stacked on a tablet, and a swipeable rail
+   only on a phone, where a row of full cards has nowhere else to go. */
+.compare{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.compare > div{
+  display:flex;flex-direction:column;
+  padding:clamp(22px,2.2vw,30px);
+  border:1px solid var(--line);border-radius:var(--r);background:var(--bg);
+}
+@media (max-width:1023px){
+  .compare{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .rail{
+    overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;padding-bottom:2px;
+    margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter);
+    scroll-padding-inline:var(--gutter);   /* snap to the gutter, not the screen edge */
+  }
+  .rail::-webkit-scrollbar{display:none}
+  .compare{display:flex;gap:12px}
+  .compare > div{scroll-snap-align:start;flex:0 0 min(88vw,340px)}
+  /* The longest title needs about 13.7em; scaling with the viewport keeps it on
+     one line down to 320 while typical phones keep the full 21px. */
+  .compare .d3{font-size:min(21px,5.4vw);white-space:nowrap}
+}
+/* the two problem cards carry a tinted rule, so the row reads as two states
+   before anyone gets to the copy */
+.compare > div:not(.win){border-color:var(--red-line)}
+/* problem cards sit a step above the page in light; dark keeps the page black */
+.compare > div:not(.win){background:#FCFCFC}
+[data-theme="dark"] .compare > div:not(.win){background:var(--bg)}
+/* Both marks are drawn, not typed. A multiplication sign and a check mark come
+   from different glyph families and are cut at different weights, so set as
+   text they never match. As SVG they share one viewBox and one stroke width,
+   and colour is left to carry the difference. */
+/* Titles break onto two lines only in the three up row (1024 and above), where
+   the columns are narrow and the lists below need a shared starting line. Below
+   that the cards are full width and each title runs on one line. */
+.compare .d3{line-height:1.2}
+.compare .br-3up{display:none}
+@media (min-width:1024px){ .compare .br-3up{display:inline} }
+.compare .mark{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+  margin-bottom:22px;
+  background:var(--surface);border:1px solid var(--line);color:var(--red)}
+/* same rhythm as the offer cards: 48px under the mark side by side, 22px stacked */
+@media (min-width:1024px){ .compare .mark{margin-bottom:48px} }
+.compare .mark svg{width:16px;height:16px;display:block}
+.compare > div:not(.win) .mark{border-color:var(--red-line)}
+.compare .mark--yes{color:var(--green)}
+.compare .win .mark{border-color:var(--green-line)}
+.compare .win{border-color:var(--green-line)}
+/* the pluses belong to the same state as the tick above them */
+.compare .win li::before{color:var(--green)}
+
+/* Titles run to one or two lines depending on the width, which left the body
+   copy starting at three different heights. Side by side, every title now
+   reserves two lines so the cards read as one row. */
+@media (min-width:1024px){
+  .compare .d3{min-height:2.4em}
+}
+.compare li{display:flex;gap:10px;color:var(--ink-2);font-size:15px;padding:5px 0}
+/* The two markers are a matched pair: a minus sign, not an em dash, so it is
+   drawn with the same stroke and width as the plus it is set against. Both get
+   a fixed box so the copy starts on the same line in every card. */
+.compare li::before{
+  content:"\2212";flex:none;width:13px;text-align:center;
+  color:var(--red);font-weight:600;
+}
+.compare .win{background:var(--surface);box-shadow:0 24px 60px -40px rgba(var(--shadow),.34)}
+
+.compare .win li::before{content:"+"}
+
+/* features
+   Each card is a column: mark, title, description, then the duration pinned to
+   the floor. The cards stretch to the tallest in the row, so pinning the
+   duration puts every one of them on the same baseline. */
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.features > div{padding:clamp(22px,2.2vw,30px);border-right:1px solid var(--line);background:var(--surface);
+  display:flex;flex-direction:column}
+.features > div:last-child{border-right:0}
+.dots{margin-bottom:22px}
+.features .d3{margin-bottom:16px}
+.features .note{margin-top:auto;padding-top:22px}
+/* The four up desktop row has the height to carry a bigger gap under the mark;
+   the stacked layouts below 1100px keep the tighter 22px. */
+@media (min-width:1101px){ .features .dots{margin-bottom:48px} }
+/* Home page offer cards only. They are not links, so the hover stays quiet: a
+   faint red wash, the mark lifts 2px, the duration turns red. Pointer devices
+   only, so a tap on touch never leaves a card stuck in its hover state. */
+.features--offers{--hover-note:var(--red);--hover-bg:#FEF7F7}      /* 3.5% red over white */
+[data-theme="dark"] .features--offers{--hover-note:#F05252;--hover-bg:#1F1717} /* 4% red over Grey-90; note stays 5.1:1 */
+.features--offers > div{transition:background-color .24s ease}
+.features--offers .dots{transition:transform .24s cubic-bezier(.2,.7,.3,1)}
+.features--offers .note{transition:color .24s ease}
+@media (hover:hover){
+  .features--offers > div:hover{background-color:var(--hover-bg)}
+  .features--offers > div:hover .dots{transform:translateY(-2px)}
+  .features--offers > div:hover .note{color:var(--hover-note)}
+}
+@media (prefers-reduced-motion:reduce){ .features--offers > div:hover .dots{transform:none} }
+
+/* steps */
+.steps{display:grid;grid-template-columns:1fr 1.25fr;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.steps__list{display:flex;flex-direction:column}
+.step{
+  display:block;width:100%;text-align:left;font:inherit;color:inherit;
+  padding:clamp(24px,2.4vw,34px);border-bottom:1px solid var(--line);
+  background:transparent;border-radius:0;cursor:pointer;
+  transition:background-color .18s ease,box-shadow .18s ease;
+}
+.step:last-child{border-bottom:0}
+.step__tab{display:none}
+.step__body{display:none}
+.steps__lede--after{display:none}
+.step .d3{display:block;font-weight:700;font-size:clamp(21px,1.9vw,26px);letter-spacing:-.025em;line-height:1.04}
+.step .body{display:block;margin-top:10px;color:var(--ink-2);font-size:15px;line-height:1.6}
+.step:not(.is-on):hover .pill{background:var(--line)}
+.steps__list .is-on{background:var(--surface);border-radius:var(--r);box-shadow:0 20px 50px -40px rgba(var(--shadow),.38)}
+.step:focus-visible{outline-offset:-3px}
+.pill{display:inline-block;font-size:14px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  padding:6px 12px;border-radius:7px;background:var(--chip);color:var(--chip-ink);margin-bottom:20px}
+/* the open step is marked in the accent, chip on a wide screen and tab on a
+   narrow one. White label on a red that clears AA in both themes. */
+.is-on .pill{background:var(--red-fill);color:#FFFFFF}
+.steps__vis{border-left:1px solid var(--line);padding:clamp(24px,2.4vw,34px);position:relative;
+  background:linear-gradient(180deg,var(--vis-1),var(--vis-2));display:flex;flex-direction:column;justify-content:center}
+.vis{display:none;width:100%}
+.vis.is-shown{display:block;animation:visin .32s ease both}
+@keyframes visin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.vis-stage{position:relative;width:100%;max-width:470px;margin:0 auto}
+.steps__cap{text-align:center;font-style:italic;color:var(--ink-3);font-size:14px;margin-bottom:26px}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;margin:0 auto;
+  box-shadow:0 24px 60px -44px rgba(var(--shadow),.44)}
+.doc .mock__row{background:var(--skeleton)}
+/* --- step illustrations --------------------------------------------------
+   Both are drawn in CSS rather than screenshotted, so they stay crisp, follow
+   the theme, and carry no client content. */
+
+/* the intro call */
+.call{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  box-shadow:0 24px 60px -44px rgba(var(--shadow),.44)}
+.call__bar{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line-soft);
+  font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.live{width:7px;height:7px;border-radius:50%;background:var(--red-pure);flex:none;
+  box-shadow:0 0 0 0 rgba(229,26,26,.5);animation:pulse 2.2s ease-out infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 7px rgba(229,26,26,0)}100%{box-shadow:0 0 0 0 rgba(229,26,26,0)}}
+.call__stage{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:14px}
+.tile{background:var(--bg);border:1px solid var(--line-soft);border-radius:10px;
+  display:grid;place-items:center;min-height:64px}
+.tile--main{grid-row:1 / span 2;min-height:136px}
+.av{position:relative;width:54px;height:54px;border-radius:50%;background:var(--skeleton);overflow:hidden;display:block}
+.av::before{content:"";position:absolute;top:9px;left:50%;width:21px;height:21px;margin-left:-10.5px;
+  border-radius:50%;background:var(--ink-mute);opacity:.55}
+.av::after{content:"";position:absolute;bottom:0;left:50%;width:38px;height:23px;margin-left:-19px;
+  border-radius:19px 19px 0 0;background:var(--ink-mute);opacity:.55}
+.av--s{width:34px;height:34px}
+.av--s::before{top:6px;width:13px;height:13px;margin-left:-6.5px}
+.av--s::after{width:24px;height:14px;margin-left:-12px;border-radius:12px 12px 0 0}
+.call__ctrl{display:flex;gap:8px;justify-content:center;padding:0 14px 16px}
+.key{width:34px;height:34px;border-radius:50%;background:var(--chip)}
+.key--end{width:46px;border-radius:17px;background:var(--red-pure)}
+
+/* the onboarding board */
+.jam{display:grid;grid-template-columns:0.82fr 1.18fr;gap:12px;padding:14px;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:11px 11px;
+  box-shadow:0 24px 60px -44px rgba(var(--shadow),.44)}
+.jam__left,.jam__right{display:flex;flex-direction:column;gap:10px}
+.jam__cover{position:relative;border-radius:9px;padding:16px 14px 30px;
+  background:linear-gradient(140deg,#5A1010 0%,#220707 78%);color:#FFF;min-height:104px}
+.jam__cover b{font-size:17px;font-weight:700;letter-spacing:-.03em;line-height:1.08;display:block}
+.jam__mark{position:absolute;left:14px;bottom:12px;display:flex;align-items:center;gap:5px;
+  font-family:var(--font-accent);font-size:8px;letter-spacing:.16em;color:#FFF;opacity:.92}
+.jam__mark i{width:8px;height:8px;flex:none;background:var(--red-pure);
+  clip-path:polygon(0 0,33% 0,33% 33%,67% 33%,67% 0,100% 0,100% 33%,67% 33%,67% 67%,100% 67%,100% 100%,67% 100%,67% 67%,33% 67%,33% 100%,0 100%,0 67%,33% 67%,33% 33%,0 33%)}
+.jam__agenda{background:linear-gradient(140deg,#4A0E0E 0%,#1D0606 82%);border-radius:9px;padding:13px 14px;flex:1}
+.jam__h{display:block;color:#FFF;font-size:13px;font-weight:700;letter-spacing:-.02em;margin-bottom:9px}
+.jam__line{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.jam__line i{height:4px;border-radius:2px;background:rgba(255,255,255,.30);flex:1}
+.jam__line i.t{flex:0 0 26px;background:rgba(255,255,255,.18)}
+.jam__band{background:var(--jam-purple);color:#FFF;border-radius:6px;padding:7px 11px;
+  font-size:11px;font-weight:600;letter-spacing:-.01em}
+.jam__grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.jam__notes{position:relative;border:1px solid var(--line);border-radius:8px;background:var(--jam-board);
+  padding:20px 9px 10px;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;flex:1;align-content:start}
+.jam__tab{position:absolute;top:6px;left:8px;font-size:9px;letter-spacing:.05em;color:var(--chip-ink);
+  background:var(--chip);border-radius:4px;padding:2px 6px}
+.sn{display:block;border-radius:3px;height:22px}
+.sn--b{background:var(--jam-blue)}
+.sn--y{background:var(--jam-yellow)}
+
+.tf-a{top:30%;left:-10%}
+.tf-b{bottom:7%;right:-8%}
+.tf-c{top:29%;right:-9%}
+.tf-d{bottom:-4%;left:8%}
+.tf-e{top:16%;left:-9%}
+.tf-f{top:48%;right:-11%}
+.tf-g{bottom:-6%;left:14%}
+/* the stage narrows at the compact breakpoint, so the tags come inside rather
+   than hanging off an edge the page has to clip */
+@media (max-width:1100px){
+  .tf-a,.tf-e{left:0}
+  .tf-d,.tf-g{left:4%}
+  .tf-b,.tf-c,.tf-f{right:0}
+  .tf-b{bottom:24%}
+  .tf{font-size:12px;padding:7px 10px}
+}
+.tagfloat{position:absolute;background:var(--surface);border:1px solid var(--line);border-radius:9px;
+  padding:8px 12px;font-size:13px;color:var(--ink-2);display:flex;gap:8px;align-items:center;
+  box-shadow:0 14px 30px -20px rgba(var(--shadow),.38)}
+
+/* stats */
+.results{display:grid;grid-template-columns:0.85fr 1.15fr;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.results__left{background:var(--surface);padding:clamp(24px,2.4vw,34px);display:flex;flex-direction:column;justify-content:flex-end;gap:14px}
+
+/* the shortlist: two places filled, one still open */
+.slots{display:flex;flex-direction:column;gap:8px;margin-bottom:clamp(20px,2.4vw,32px)}
+.slot{display:flex;align-items:center;gap:12px;padding:11px 13px;
+  border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.slot__ic{width:26px;height:26px;flex:none;border-radius:7px;background:var(--skeleton)}
+.slot__rows{flex:1;display:flex;flex-direction:column;gap:6px}
+.slot__rows i{display:block;height:6px;border-radius:3px;background:var(--skeleton)}
+.slot__rows .w85{width:85%}.slot__rows .w70{width:70%}.slot__rows .w50{width:50%}
+.slot__k{flex:none;font-size:13px;font-weight:600;letter-spacing:-.02em;color:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.slot--open{border-style:dashed;border-color:var(--red);background:transparent}
+.slot--open .slot__rows i{background:var(--red);opacity:.22}
+.slot__ic--mark{background:var(--red-pure);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2026%2026%22%3E%3Cg%20fill%3D%22%23000%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%2221%22%20y%3D%220%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%227%22%20y%3D%227%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%2214%22%20y%3D%227%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%227%22%20y%3D%2214%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%2214%22%20y%3D%2214%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%220%22%20y%3D%2221%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%2221%22%20y%3D%2221%22%20width%3D%225%22%20height%3D%225%22/%3E%3C/g%3E%3C/svg%3E") center/20px 20px no-repeat;
+          mask:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2026%2026%22%3E%3Cg%20fill%3D%22%23000%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%2221%22%20y%3D%220%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%227%22%20y%3D%227%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%2214%22%20y%3D%227%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%227%22%20y%3D%2214%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%2214%22%20y%3D%2214%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%220%22%20y%3D%2221%22%20width%3D%225%22%20height%3D%225%22/%3E%3Crect%20x%3D%2221%22%20y%3D%2221%22%20width%3D%225%22%20height%3D%225%22/%3E%3C/g%3E%3C/svg%3E") center/20px 20px no-repeat}
+.slot__k--soon{width:26px;height:6px;border-radius:3px;background:var(--red);opacity:.35}
+.results__right{border-left:1px solid var(--line);display:grid;grid-template-rows:auto 1fr auto}
+/* same lifted fill as the problem cards in light; dark keeps the page black */
+.results__right{background:#FCFCFC}
+[data-theme="dark"] .results__right{background:var(--bg)}
+.results__top{padding:22px clamp(24px,2.4vw,34px);border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:center}
+.results__pair{display:grid;grid-template-columns:1fr 1fr}
+.results__pair > div{padding:clamp(24px,2.4vw,34px);border-right:1px solid var(--line)}
+.results__pair > div:last-child{border-right:0}
+/* Label, figure, then context: 16px above the figure, 20px below it, and the
+   figure itself in the brand red. */
+.results__pair .stat{margin:16px 0 20px;color:var(--red)}
+.results__foot{padding:clamp(24px,2.4vw,34px);border-top:1px solid var(--line)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.tools span{border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--ink-2);background:var(--surface)}
+
+/* accordion */
+.acc{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--bg)}
+.acc details{border-bottom:1px solid var(--line)}
+.acc details:last-child{border-bottom:0}
+.acc summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:28px;
+  padding:clamp(22px,2.4vw,32px) clamp(22px,2.4vw,32px)}
+.acc summary::-webkit-details-marker{display:none}
+.acc .num{font-size:14px;font-weight:600;color:var(--chip-ink);background:var(--chip);border-radius:6px;padding:5px 10px;min-width:50px;text-align:center}
+/* The open row carries the brand red on both ends: the number chip fills red
+   (same fill as the selected step chip) and the minus toggle turns red. */
+.acc details[open]:not(.is-closing) .num{background:var(--red-fill);color:#FFFFFF}
+.acc details[open]:not(.is-closing) .tog{color:var(--red);border-color:var(--red-line)}
+.acc .t{font-size:clamp(20px,2vw,27px);font-weight:700;letter-spacing:-.03em}
+.acc .tog{margin-left:auto;width:38px;height:38px;border:1px solid var(--line);border-radius:9px;
+  display:grid;place-items:center;background:var(--surface);color:var(--ink);font-size:18px;line-height:1}
+.acc details[open]:not(.is-closing) .tog::before{content:"\2212"}
+.acc details:not([open]) .tog::before,.acc details.is-closing .tog::before{content:"+"}
+.acc .panel-body{padding:0 clamp(22px,2.4vw,32px) clamp(26px,2.8vw,36px) calc(50px + 28px + clamp(22px,2.4vw,32px))}
+.acc .panel-body p{max-width:74ch}
+
+/* Height is animated in script, because <details> gives no transitionable
+   box of its own. The wrapper is what moves; the inner content fades and
+   lifts slightly behind it so the reveal does not read as a blind. */
+.acc details > .panel-body,.faq details > .a{overflow:hidden;will-change:height}
+.acc details > .panel-body > *,.faq details > .a > *,.faq details > .a{
+  transition:opacity .26s ease,transform .26s cubic-bezier(.2,.7,.3,1)}
+.is-collapsing > .panel-body > *,.is-collapsing > .a{opacity:0;transform:translateY(-4px)}
+.is-expanding > .panel-body > *,.is-expanding > .a{opacity:0;transform:translateY(6px)}
+.acc .tog{transition:background-color .18s ease,border-color .18s ease,color .18s ease}
+.acc .num{transition:background-color .18s ease,color .18s ease}
+
+/* Scroll filled headline. The span is inline, so its background runs through
+   the lines end to end: sizing the red layer from 0 to 100% fills line one left
+   to right, then line two. --fill is set from scroll position in site.js. */
+.ink-fill{
+  --fill:0%;
+  color:transparent;-webkit-text-fill-color:transparent;
+  background-image:linear-gradient(var(--red),var(--red)),linear-gradient(var(--ink),var(--ink));
+  background-size:var(--fill) 100%,100% 100%;
+  background-repeat:no-repeat;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-box-decoration-break:slice;box-decoration-break:slice;
+}
+@media (prefers-reduced-motion:reduce){ .ink-fill{--fill:100%} }
+
+/* faq */
+.faq{border-top:1px solid var(--line)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{list-style:none;cursor:pointer;padding:24px 0;display:flex;gap:20px;align-items:center;
+  font-size:clamp(17px,1.5vw,20px);font-weight:600;letter-spacing:-.02em}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";margin-left:auto;color:var(--red);font-size:20px}
+.faq details[open] summary::after{content:"\2212"}
+.faq .a{padding-bottom:26px;color:var(--ink-2);max-width:70ch}
+
+/* closing cta */
+.cta{text-align:center;border-top:1px solid var(--line);padding-block:clamp(80px,10vw,150px);position:relative;z-index:2}
+.cta .btn{margin-top:30px}
+
+/* footer */
+.ftr{border-top:1px solid var(--line);background:var(--surface);padding-block:clamp(48px,5vw,72px) 28px;position:relative;z-index:2}
+.ftr__cols{display:grid;grid-template-columns:1.6fr 1fr 1fr 1.1fr;gap:clamp(24px,3vw,48px)}
+.ftr h4{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:500;margin-bottom:16px}
+.ftr li{margin-bottom:2px}
+.ftr a{display:inline-block;color:var(--ink-2);font-size:15px;padding:5px 0;transition:color .15s ease}
+.ftr a:hover{color:var(--ink)}
+.ftr__base{margin-top:clamp(36px,4vw,56px);padding-top:22px;border-top:1px solid var(--line);
+  display:flex;gap:22px;flex-wrap:wrap;font-size:13px;color:var(--ink-3)}
+.ftr__base a{font-size:13px;padding:4px 0}
+
+.page-top{padding-top:clamp(34px,4.6vw,68px);padding-bottom:clamp(36px,4.6vw,60px)}
+
+/* --- inner page components ------------------------------------------------
+   Everything below is shared by the twelve pages behind the home page. Same
+   tokens, same panel language, no new colours. */
+
+/* a services row: label column, then the claim */
+.svc{display:grid;grid-template-columns:280px 1fr;gap:0;
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:16px;background:var(--bg)}
+.svc__meta{padding:clamp(22px,2.2vw,30px);border-right:1px solid var(--line);background:var(--surface)}
+.svc__body{padding:clamp(22px,2.2vw,30px)}
+.svc__letter{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:9px;
+  background:var(--solid);color:var(--solid-ink);font-size:14px;font-weight:700;margin-bottom:16px}
+
+/* numbered support lists */
+.ticks li{display:flex;gap:12px;align-items:baseline;color:var(--ink-2);font-size:15px;padding:7px 0;
+  border-top:1px solid var(--line-soft)}
+.ticks li:first-child{border-top:0}
+.ticks .n{flex:none;font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--red);
+  font-variant-numeric:tabular-nums}
+
+/* the work index */
+.wrow{display:grid;grid-template-columns:64px 1fr auto;gap:clamp(16px,2.4vw,34px);align-items:center;
+  padding:clamp(22px,2.6vw,34px) clamp(20px,2.2vw,30px);
+  border-bottom:1px solid var(--line);transition:background-color .18s ease}
+.wrow:last-of-type{border-bottom:0}
+.wrow:hover{background:var(--surface)}
+/* every part of a row is a span, so each one has to be told to stack */
+.wrow > span{display:block;min-width:0}
+.wrow__i{font-size:13px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.wrow__t{display:block;font-size:clamp(22px,2.4vw,32px);font-weight:700;letter-spacing:-.03em;line-height:1.05}
+.wrow__s{display:block;margin-top:7px;color:var(--ink-3);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.wrow__d{display:block;margin-top:10px;color:var(--ink-2);font-size:15px;max-width:52ch}
+.wrow__n{display:block;font-size:clamp(30px,3.4vw,46px);font-weight:700;letter-spacing:-.04em;line-height:1;
+  white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right}
+.wrow__go{display:block;font-size:13px;color:var(--ink-3);margin-top:8px;text-align:right}
+.wrow:hover .wrow__go{color:var(--red)}
+
+/* case study meta strip */
+.meta{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;background:var(--surface)}
+.meta > div{padding:clamp(18px,2vw,26px);border-right:1px solid var(--line)}
+.meta > div:last-child{border-right:0}
+.meta .cap{display:block;margin-bottom:8px}
+.meta .v{display:block}
+.meta .v{display:block;font-size:16px;font-weight:600;letter-spacing:-.02em}
+
+/* a bordered prose block, used for the error state and constraints */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden}
+.split > div{padding:clamp(24px,2.6vw,36px)}
+.split > div:first-child{border-right:1px solid var(--line);background:var(--surface)}
+
+/* stat trio */
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden}
+.stats3 > div{padding:clamp(24px,2.6vw,36px);border-right:1px solid var(--line);background:var(--surface)}
+.stats3 > div:last-child{border-right:0}
+.stats3 > div{display:flex;flex-direction:column}
+.stats3 .stat{font-size:clamp(34px,4vw,54px);margin:16px 0 20px;color:var(--red)}
+/* some figures are phrases ("Under 10 min"), which will not fit at display size */
+.stat--long{font-size:clamp(25px,2.7vw,37px)!important;line-height:1.1}
+/* labels run to one or two lines, so reserve two and the figures share a line */
+@media (min-width:1024px){ .stats3 .cap{min-height:2.6em} }
+
+/* decisions: chose X, over Y, because Z. Three across, stacking below 900. */
+/* Decisions run as stacked cards, same pattern as the phases above: the number
+   inline with the title, the alternative under it, the reason under that, then
+   the mock filling the rest of the card. */
+/* one card, with the three decisions divided by a band of the page ground and
+   a hairline either side, so each block reads as its own without becoming a
+   separate card */
+.decs{display:grid;grid-template-columns:1fr;gap:12px;background:var(--bg);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.decs > div{background:var(--surface)}
+.decs > div + div{border-top:1px solid var(--line)}
+.decs > div:not(:last-child){border-bottom:1px solid var(--line)}
+.decs .dec__ttl,.decs .over,.decs .why{padding-inline:clamp(18px,1.9vw,24px)}
+.decs .dec__ttl{display:flex;align-items:baseline;gap:12px;padding-top:clamp(18px,1.9vw,24px);
+  font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.decs .dec__ttl .n{color:var(--red);font-variant-numeric:tabular-nums}
+.decs .over{margin-top:8px;font-size:14px;color:var(--ink-3)}
+.decs .over b{font-weight:600;color:var(--ink-2)}
+.decs .why{margin-top:10px;padding-bottom:clamp(18px,1.9vw,24px);font-size:15px;color:var(--ink-2);max-width:74ch}
+/* the mock for each decision, in the same frame as the phase cards above */
+/* a still in a decision, framed like everything else: a long page shows its top
+   and opens full size on click */
+.dec__fig{display:block;position:relative;aspect-ratio:1280 / 824;overflow:hidden;line-height:0;
+  border-bottom:1px solid var(--line);background:#FFFFFF}
+.dec__fig img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;
+  transition:transform .4s cubic-bezier(.2,.7,.3,1)}
+@media (hover:hover){
+  .dec__fig:hover img{transform:scale(1.02)}
+  .dec__fig:hover .phase__open,.dec__fig:focus-visible .phase__open{opacity:1;transform:none}
+}
+
+/* a recording in a decision, filling the same frame as the stills beside it */
+.dec__video video{width:100%;height:100%;object-fit:cover;object-position:center;display:block;
+  background:#FFFFFF}
+
+/* a live Figma prototype in a decision, in the same frame as the placeholders */
+.dec__embed{position:relative;aspect-ratio:1280 / 824;border-bottom:1px solid var(--line);background:var(--bg)}
+.dec__embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+
+.dec__media{aspect-ratio:1280 / 824;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--vis-1),var(--vis-2));
+  display:grid;place-items:center;text-align:center;padding:24px}
+.dec__media p{color:var(--ink-3);font-size:14px;max-width:44ch}
+.dec__media .cap{display:block;margin-bottom:10px;color:var(--red)}
+
+/* a pulled quote, kept to one voice and one attribution */
+.quote{border:1px solid var(--line);border-left:3px solid var(--red);border-radius:var(--r);
+  background:var(--surface);padding:clamp(26px,3vw,40px)}
+.quote p{font-size:clamp(19px,1.8vw,25px);font-weight:600;letter-spacing:-.025em;line-height:1.35;max-width:46ch}
+.quote footer{margin-top:18px;font-size:14px;color:var(--ink-3)}
+
+/* three phases of a project, stacked. Same card as before, with the order
+   flipped: the title block sits at the top of the card and the media below it.
+   Each image runs the full card width at its own proportions, so nothing is
+   cropped. */
+.phases{display:grid;grid-template-columns:1fr;gap:16px}
+.phase{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.phase__head{padding:clamp(18px,1.9vw,24px);border-bottom:1px solid var(--line)}
+.phase__ttl{display:flex;align-items:baseline;gap:12px;
+  font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.phase__ttl .n{color:var(--red);font-variant-numeric:tabular-nums}
+.phase__head .d{margin-top:8px;font-size:15px;color:var(--ink-2);max-width:74ch}
+.phase__head .d a{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--red-line)}
+.phase__head .d a:hover{color:var(--red);text-decoration-color:var(--red)}
+/* one frame for all three phases, so the stack reads as a set rather than
+   three captures that happened to be exported at slightly different heights */
+.phase__fig{display:block;position:relative;aspect-ratio:1280 / 824;
+  background:#FFFFFF;overflow:hidden;line-height:0}
+.phase__fig img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;
+  transition:transform .4s cubic-bezier(.2,.7,.3,1)}
+/* the live FigJam board, framed to the same proportions as the screen captures
+   below it, so all three cards are the same size */
+.phase__embed{position:relative;aspect-ratio:1280 / 824;background:var(--bg)}
+.phase__embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+/* the still that stands in for the board where frames are blocked */
+.phase__embed .phase__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:left center;display:block}
+.phase__open{position:absolute;right:10px;bottom:10px;font-size:12px;letter-spacing:.04em;
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 9px;color:var(--ink-2);
+  opacity:0;transform:translateY(4px);transition:opacity .2s ease,transform .2s ease}
+@media (hover:hover){
+  .phase__fig:hover img{transform:scale(1.03)}
+  .phase__fig:hover .phase__open,.phase__fig:focus-visible .phase__open{opacity:1;transform:none}
+}
+
+/* before and after pair. Both sides share the 4:3 frame the phases use, so the
+   drawn document on the left and the screen capture on the right read as one
+   comparison rather than two unrelated blocks. */
+/* stacked, so each side gets the same frame as the phase and decision cards */
+.ba{display:grid;grid-template-columns:1fr;gap:16px}
+.ba > figure{margin:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);
+  display:flex;flex-direction:column}
+.ba__fig{position:relative;aspect-ratio:1280 / 824;background:#FFFFFF;overflow:hidden;display:block}
+.ba__fig img,.ba__fig svg{width:100%;height:100%;display:block}
+.ba__fig img{object-fit:contain;object-position:center}   /* the whole screen, nothing cropped */
+/* The signature draws itself, holds, then resets while invisible, so the card
+   reads as a document being signed rather than a static illustration. */
+.ba__fig .sign{stroke-dasharray:120;stroke-dashoffset:120;animation:sign 7s ease-in-out infinite}
+@keyframes sign{
+  0%{stroke-dashoffset:120;opacity:0}
+  4%{opacity:.55}
+  30%{stroke-dashoffset:0;opacity:.55}
+  88%{stroke-dashoffset:0;opacity:.55}
+  96%{stroke-dashoffset:0;opacity:0}
+  97%{stroke-dashoffset:120;opacity:0}
+  100%{stroke-dashoffset:120;opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .ba__fig .sign{animation:none;stroke-dashoffset:0;opacity:.55}
+}
+
+/* the after side can be a recording of the shipped journey */
+/* The capture fills the frame edge to edge, the same area the signed document
+   opposite covers, and the card's own corners do the trimming. Its ratio is a
+   hair taller than the frame, so cover takes about four source pixels off the
+   top and bottom edges, which the rounded corners were hiding anyway. Contain
+   would leave white down both sides instead. */
+.ba__video{background:#FFFFFF}
+.ba__video video{width:100%;height:100%;object-fit:cover;object-position:center;display:block;background:#FFFFFF}
+
+/* the after side can be a live prototype rather than a capture */
+.ba__embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.ba figcaption{padding:clamp(18px,1.9vw,24px);border-top:1px solid var(--line)}
+.ba figcaption .n{display:block;font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--red);margin-bottom:10px}
+.ba figcaption .d{display:block;font-size:14px;color:var(--ink-2)}
+
+
+/* media placeholder, until the real captures land */
+.shot{border:1px dashed var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--vis-1),var(--vis-2));
+  min-height:clamp(200px,30vw,380px);display:grid;place-items:center;text-align:center;padding:28px}
+.shot p{color:var(--ink-3);font-size:14px;max-width:44ch}
+.shot .cap{display:block;margin-bottom:10px;color:var(--red)}
+
+/* process steps */
+.pstep{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:16px;background:var(--surface)}
+.pstep__h{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;
+  padding:clamp(20px,2.2vw,28px) clamp(22px,2.4vw,32px);border-bottom:1px solid var(--line);background:var(--bg)}
+.pstep__n{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--solid-ink);background:var(--solid);
+  border-radius:6px;padding:5px 10px}
+.pstep__b{padding:clamp(22px,2.6vw,34px)}
+
+/* the onboarding agenda */
+.agenda li{display:grid;grid-template-columns:74px 1fr;gap:18px;align-items:baseline;
+  padding:13px 0;border-top:1px solid var(--line-soft)}
+.agenda li:first-child{border-top:0}
+.agenda .t{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.agenda .t span{display:inline;font-size:12px;letter-spacing:.1em;color:var(--ink-3);margin-left:4px}
+.agenda .d{color:var(--ink-2);font-size:15px}
+.agenda .d b{display:block;font-weight:600;color:var(--ink);margin-bottom:2px}
+
+/* people */
+.people{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.person{border:1px solid var(--line);border-radius:var(--r);padding:clamp(22px,2.4vw,32px);background:var(--surface)}
+.person__av{width:56px;height:56px;border-radius:50%;background:var(--skeleton);position:relative;overflow:hidden;margin-bottom:18px}
+.person__av::before{content:"";position:absolute;top:10px;left:50%;width:22px;height:22px;margin-left:-11px;
+  border-radius:50%;background:var(--ink-mute);opacity:.5}
+.person__av::after{content:"";position:absolute;bottom:0;left:50%;width:40px;height:24px;margin-left:-20px;
+  border-radius:20px 20px 0 0;background:var(--ink-mute);opacity:.5}
+
+/* the booking page */
+.book{display:grid;grid-template-columns:340px 1fr;gap:0;border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.book__rail{padding:clamp(24px,2.6vw,36px);border-right:1px solid var(--line);background:var(--bg)}
+.book__rail dl{margin:0}
+.book__rail dt{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:24px}
+.book__rail dt:first-of-type{margin-top:0}
+.book__rail dd{margin:8px 0 0;color:var(--ink-2);font-size:15px;line-height:1.55}
+.book__rail dd b{color:var(--ink);font-weight:600}
+.book__cal{min-height:760px;position:relative;background:#FFFFFF}
+.book__cal iframe{width:100%;height:100%;min-height:760px;border:0;display:block}
+.book__fall{padding:16px clamp(20px,2.4vw,30px);border-top:1px solid var(--line);
+  display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:14px;color:var(--ink-3)}
+
+/* the 404 */
+.oops{text-align:center;padding-block:clamp(70px,12vw,150px)}
+.oops .code{font-size:clamp(90px,20vw,220px);font-weight:700;letter-spacing:-.06em;line-height:1;color:var(--red)}
+
+/* long form prose, used by privacy */
+.prose{max-width:70ch}
+.prose h2{font-size:clamp(19px,1.8vw,24px);letter-spacing:-.025em;margin:38px 0 12px}
+.prose p{color:var(--ink-2);font-size:15px;line-height:1.65;margin-bottom:12px}
+.prose a{color:var(--red);text-decoration:underline;text-underline-offset:3px}
+
+@media (max-width:1100px){
+  .svc{grid-template-columns:1fr}
+  .svc__meta{border-right:0;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:center}
+  .svc__letter{margin-bottom:0}
+  .svc__meta .cap{margin-left:auto}
+  .split,.book{grid-template-columns:1fr}
+  .split > div:first-child,.book__rail{border-right:0;border-bottom:1px solid var(--line)}
+  .meta{grid-template-columns:1fr 1fr}
+  .meta > div:nth-child(2n){border-right:0}
+  .meta > div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .book__cal,.book__cal iframe{min-height:640px}
+}
+@media (max-width:820px){
+  .stats3{grid-template-columns:1fr}
+  .stats3 > div{border-right:0;border-bottom:1px solid var(--line)}
+  .stats3 > div:last-child{border-bottom:0}
+  .people{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .wrow{grid-template-columns:1fr;gap:10px;text-align:left}
+  .wrow__n{font-size:clamp(26px,9vw,38px);text-align:left;margin-top:4px}
+  .wrow__go{text-align:left}
+  .agenda li{grid-template-columns:1fr;gap:4px}
+  .meta{grid-template-columns:1fr}
+  .meta > div{border-right:0;border-bottom:1px solid var(--line)}
+  .meta > div:last-child{border-bottom:0}
+}
+
+/* --- reveal -------------------------------------------------------------- */
+.reveal{transition:opacity .5s ease,transform .5s ease}
+.reveal.is-armed{opacity:0;transform:translateY(12px)}
+.reveal.is-armed.is-in{opacity:1;transform:none}
+
+/* --- responsive ---------------------------------------------------------- */
+@media (max-width:1100px){
+  .features{grid-template-columns:repeat(2,1fr)}
+  .features > div:nth-child(2){border-right:0}
+  .features > div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .steps,.results{grid-template-columns:1fr}
+  .results__right{border-left:0;border-top:1px solid var(--line)}
+
+  /* --- the compact layout ----------------------------------------------
+     Stacked, three full rows plus an illustration is a lot of scrolling for
+     one idea. The rows collapse to a tab strip, the illustration sits under
+     it, and the copy for the open step reads last. */
+  .steps{display:block;border:0;border-radius:0;overflow:visible}
+
+  /* A text tab bar with the active label underlined, sitting on one rule that
+     runs the full width. Same type and colours as everywhere else. */
+  .steps__list{flex-direction:row;gap:0;overflow-x:auto;scrollbar-width:none;
+    border-bottom:1px solid var(--line);
+    margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter)}
+  .steps__list::-webkit-scrollbar{display:none}
+  .step{
+    position:relative;flex:none;width:auto;
+    padding:0 0 13px;margin-right:clamp(24px,6vw,44px);
+    border:0;border-radius:0;background:transparent;box-shadow:none;cursor:pointer;
+  }
+  .step:last-child{margin-right:0}
+  .step .pill,.step .d3,.step .body{display:none}
+  .step__tab{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em;
+    color:var(--ink-3);white-space:nowrap;transition:color .18s ease}
+  .step::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+    border-radius:2px;background:transparent;transition:background-color .2s ease}
+  .steps__list .is-on{background:transparent;border-radius:0;box-shadow:none}
+  /* the open tab is marked in the accent, label and rule together */
+  .steps__list .is-on .step__tab{color:var(--red)}
+  .steps__list .is-on::after{background:var(--red)}
+  /* hover must not outrank the open tab: same specificity, and it sits later
+     in the file, so a pointer resting on the open tab was greying it out */
+  .step:not(.is-on):hover .step__tab{color:var(--ink-2)}
+
+  /* the illustration comes back, under the tabs */
+  .steps__vis{display:block;border:1px solid var(--line);border-radius:var(--r);
+    margin-top:22px;padding:clamp(20px,5vw,28px)}
+  .steps__cap{display:none}
+  .vis-stage{max-width:340px}
+
+  /* and the copy for the open step reads after it */
+  .step__body{display:block;margin-top:24px}
+  .step__body .d3{font-size:clamp(21px,5.6vw,26px);letter-spacing:-.025em;line-height:1.06;font-weight:700}
+  .step__body .body{margin-top:16px}
+
+  .steps__lede{display:none}
+  .steps__lede--after{display:block;margin-top:8px;text-align:center}
+  .head{margin-bottom:clamp(26px,5vw,40px)}
+}
+@media (max-width:900px){
+  /* the rails are hidden below this width, so the padding that reserved room
+     for them goes with it */
+  .wrap,.hdr__in{padding-inline:var(--gutter)}
+  .nav{display:none}
+  .menu-btn{display:grid;margin-inline:auto 0}
+  .hdr__in{gap:14px}
+  .menu{display:block;position:fixed;inset:var(--header-h) 0 0;background:var(--bg);z-index:45;
+    padding:var(--gutter);transform:translateY(-100%);visibility:hidden;transition:transform .28s,visibility .28s}
+  .menu.is-open{transform:none;visibility:visible}
+  .menu a{display:block;font-size:30px;font-weight:700;letter-spacing:-.03em;padding:16px 0;border-bottom:1px solid var(--line)}
+  .mock__body{grid-template-columns:1fr}
+  .mock__side{display:none}
+  .mock__canvas{grid-template-columns:repeat(3,1fr)}
+  .results__pair{grid-template-columns:1fr}
+  .results__pair > div{border-right:0;border-bottom:1px solid var(--line)}
+  .ftr__cols{grid-template-columns:1fr 1fr}
+  .acc summary{gap:16px}
+  .acc .panel-body{padding-left:clamp(22px,2.4vw,32px)}
+}
+@media (max-width:1040px){
+  /* at 48px the wordmark is 251px wide, so it hands over to the mark before
+     it starts crowding the nav */
+  .hdr .brand__full{display:none!important}
+  .hdr .brand__mark.is-light{display:block}
+  [data-theme="dark"] .hdr .brand__mark.is-light{display:none}
+  [data-theme="dark"] .hdr .brand__mark.is-dark{display:block}
+  .hdr .brand__mark{height:40px}
+}
+@media (max-width:640px){
+  .hide-xs{display:none}
+  .hdr__in{--ctl:36px;gap:8px}
+  .hdr .brand__mark{height:36px}
+  .lg--motive{height:18px}
+  .lg--rundet{height:16px}
+  .lg--taraki{height:20px}
+  .lg--neblo{height:19px}
+  .theme svg{width:15px;height:15px}
+
+  .mock__hud{position:static;transform:none;margin:0 auto 14px;max-width:100%;
+    flex-direction:column;gap:10px}
+  .mock__float{width:auto;justify-content:center;text-align:center;padding:12px 14px}
+  .mock__float__t{white-space:normal}
+  .hero__cta{flex-direction:column;align-items:center;gap:10px}
+  .hero__cta .btn{width:100%;max-width:320px}
+  .hero__mock{margin-top:clamp(34px,6vw,60px)}
+}
+@media (max-width:560px){
+  .features{grid-template-columns:1fr}
+  .features > div{border-right:0;border-bottom:1px solid var(--line)}
+  .features > div:last-child{border-bottom:0}
+  .ftr__cols{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+  .marquee__track{animation:none}
+  .reveal{opacity:1!important;transform:none!important}
+}
+
+
+/* --- theme switch --------------------------------------------------------- */
+.theme{width:var(--ctl);height:var(--ctl);flex:none;display:grid;place-items:center;
+  border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);
+  transition:border-color .15s,background .15s}
+.theme:hover{border-color:var(--ink-3)}
+.theme svg{width:17px;height:17px;display:block}
+.theme .i-moon{display:none}
+[data-theme="dark"] .theme .i-sun{display:none}
+[data-theme="dark"] .theme .i-moon{display:block}
+
+/* accent marks follow the theme */
+.dots,.tick,.results__top svg{color:var(--red-pure)}
+.dots g,.results__top svg g{fill:currentColor}
+.tick{background:currentColor}
