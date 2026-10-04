@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /book/
-
-Sitemap: https://errorstate.design/sitemap.xml
