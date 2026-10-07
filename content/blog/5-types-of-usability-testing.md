@@ -5,10 +5,12 @@ date: "2025-08-30"
 author: "Error State"
 description: "Five usability testing methods founders should know, with the business value, dos and don'ts, and leadership takeaway for each."
 tags: ["SaaS UX", "Process"]
-cover: "New_cover.png"
+cover: "cover.jpg"
 coverAlt: "Usability testing cover image"
 originalUrl: "https://error-state.medium.com/5-types-of-usability-testing-every-founder-should-know-in-2025-b30757bb881c"
 ---
+
+(images/5-types-of-usability-testing/New_cover.png)
 
 As a founder or C suite leader, you're constantly balancing growth, product market fit, and operational efficiency. While strategy and vision often dominate boardroom conversations, one of the most impactful (yet underestimated) levers for business success is **usability testing**.
 
