@@ -33,10 +33,37 @@ module.exports = {
 
     canonical: (data) => `/blog/${data.slug}/`,
 
-    ogImage: (data) =>
-      data.cover ? `${SITE}/blog/images/${data.slug}/${data.cover}` : null,
+    /**
+     * Two images, one of them optional.
+     *
+     * `thumbnail` is the card on the index and the Open Graph image that Slack,
+     * LinkedIn and X show on a pasted link. Every post needs one.
+     *
+     * `lead` is the image at the top of the post. Leave it out and the
+     * thumbnail is used, which is the normal case. Name a different file when
+     * the post wants a different opening image, or set `lead: false` to start
+     * straight on the writing.
+     *
+     * `cover` is still read as a fallback so an un-migrated post keeps working.
+     */
+    thumb: (data) => data.thumbnail || data.cover || null,
 
-    ogImageAlt: (data) => data.coverAlt,
+    thumbAlt: (data) => data.thumbnailAlt || data.coverAlt || "",
+
+    leadImage: (data) => {
+      if (data.lead === false) return null;
+      return data.lead || data.thumbnail || data.cover || null;
+    },
+
+    leadAltText: (data) =>
+      data.leadAlt || data.thumbnailAlt || data.coverAlt || "",
+
+    ogImage: (data) => {
+      const t = data.thumbnail || data.cover;
+      return t ? `${SITE}/blog/images/${data.slug}/${t}` : null;
+    },
+
+    ogImageAlt: (data) => data.thumbnailAlt || data.coverAlt,
 
     schema: (data) => {
       if (!live(data)) return null;
@@ -49,8 +76,8 @@ module.exports = {
         url,
         headline: data.title,
         description: data.description,
-        image: data.cover
-          ? [`${SITE}/blog/images/${data.slug}/${data.cover}`]
+        image: (data.thumbnail || data.cover)
+          ? [`${SITE}/blog/images/${data.slug}/${data.thumbnail || data.cover}`]
           : undefined,
         datePublished: published,
         dateModified: published,

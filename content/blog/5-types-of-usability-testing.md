@@ -5,8 +5,8 @@ date: "2025-08-30"
 author: "Error State"
 description: "Five usability testing methods founders should know, with the business value, dos and don'ts, and leadership takeaway for each."
 tags: ["SaaS UX", "Process"]
-cover: "cover.jpg"
-coverAlt: "A grid of interface panels, one of them resolved in red"
+thumbnail: "cover.jpg"
+thumbnailAlt: "A grid of interface panels, one of them resolved in red"
 ---
 
 As a founder or C suite leader, you're constantly balancing growth, product market fit, and operational efficiency. While strategy and vision often dominate boardroom conversations, one of the most impactful (yet underestimated) levers for business success is **usability testing**.

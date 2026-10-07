@@ -5,8 +5,8 @@ date: "2025-08-15"
 author: "Error State"
 description: "How young designers can build real connections when roles are remote, junior jobs are shrinking, and AI is everywhere."
 tags: ["Community"]
-cover: "cover.png"
-coverAlt: "A network of linked nodes drawn from the Error State mark, two of them live in red"
+thumbnail: "cover.png"
+thumbnailAlt: "A network of linked nodes drawn from the Error State mark, two of them live in red"
 ---
 
 In a world where design portfolios are built with AI, job markets are flooded with bootcamp grads, and most networking happens through screen pixels instead of coffee cups, how do you build meaningful connections as a young, aspiring designer in 2025?

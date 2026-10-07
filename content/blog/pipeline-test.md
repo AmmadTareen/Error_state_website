@@ -5,8 +5,8 @@ date: "2026-10-04"
 author: "Error State"
 description: "A throwaway post that exercises the build. Delete the file once the deploy goes green and the post disappears on the next build."
 tags: ["Process"]
-cover: "cover.png"
-coverAlt: "Five numbered steps on a line, the last one open and marked in red"
+thumbnail: "cover.png"
+thumbnailAlt: "Five numbered steps on a line, the last one open and marked in red"
 ---
 
 If you are reading this on errorstate.design, the whole chain works: a Markdown
