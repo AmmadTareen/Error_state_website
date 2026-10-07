@@ -24,9 +24,9 @@ ogType: article
         </ul>
       </header>
 
-      {%- if cover %}
+      {%- if leadImage %}
       <figure class="post__cover">
-        <img src="{{ site.url }}/blog/images/{{ slug }}/{{ cover }}" alt="{{ coverAlt }}" width="1280" height="720" decoding="async">
+        <img src="{{ site.url }}/blog/images/{{ slug }}/{{ leadImage }}" alt="{{ leadAltText }}" width="1280" height="720" decoding="async">
       </figure>
       {%- endif %}
 
