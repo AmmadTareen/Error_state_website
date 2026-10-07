@@ -5,7 +5,7 @@ date: "2025-08-30"
 author: "Error State"
 description: "Five usability testing methods founders should know, with the business value, dos and don'ts, and leadership takeaway for each."
 tags: ["SaaS UX", "Process"]
-cover: "cover.jpg"
+cover: "New_cover.png"
 coverAlt: "Usability testing cover image"
 originalUrl: "https://error-state.medium.com/5-types-of-usability-testing-every-founder-should-know-in-2025-b30757bb881c"
 ---
