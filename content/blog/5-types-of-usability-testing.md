@@ -9,6 +9,8 @@ thumbnail: "cover.jpg"
 thumbnailAlt: "A grid of interface panels, one of them resolved in red"
 ---
 
+![Testing out an image](Image1.jpeg)
+
 As a founder or C suite leader, you're constantly balancing growth, product market fit, and operational efficiency. While strategy and vision often dominate boardroom conversations, one of the most impactful (yet underestimated) levers for business success is **usability testing**.
 
 Why? Because **every friction point in your product is a cost**, whether in lost conversions, higher support tickets, or declining retention. Usability testing doesn't just improve design; it safeguards revenue. Here are five types of usability testing that leaders should know, complete with their business value, dos and don'ts, and practical leadership takeaways.
