@@ -7,7 +7,23 @@
  * them locally; the Netlify build never sets it.
  */
 
+const fs = require("node:fs");
+const path = require("node:path");
+
 const SITE = process.env.BASE_URL ?? "https://errorstate.design";
+
+/**
+ * A cover can ship a dark twin: the same name with `-dark` before the
+ * extension, sitting beside it in content/blog/images/<slug>/. Name one and
+ * the page shows it whenever the site is in dark mode. Name none and the
+ * single image is used in both, exactly as before.
+ */
+const darkTwin = (slug, file) => {
+  if (!slug || !file) return null;
+  const ext = path.extname(file);
+  const twin = `${path.basename(file, ext)}-dark${ext}`;
+  return fs.existsSync(path.join(__dirname, "images", slug, twin)) ? twin : null;
+};
 
 const live = (data) => !data.draft || Boolean(process.env.ELEVENTY_DRAFTS);
 
@@ -39,10 +55,11 @@ module.exports = {
      * `thumbnail` is the card on the index and the Open Graph image that Slack,
      * LinkedIn and X show on a pasted link. Every post needs one.
      *
-     * `lead` is the image at the top of the post. Leave it out and the
-     * thumbnail is used, which is the normal case. Name a different file when
-     * the post wants a different opening image, or set `lead: false` to start
-     * straight on the writing.
+     * `showThumbnail: false` keeps the top of the post clear. Left out, or
+     * true, the thumbnail opens the post, which is the normal case.
+     *
+     * `lead` overrides that with a different file when the post should open on
+     * something other than its thumbnail.
      *
      * `cover` is still read as a fallback so an un-migrated post keeps working.
      */
@@ -50,9 +67,18 @@ module.exports = {
 
     thumbAlt: (data) => data.thumbnailAlt || data.coverAlt || "",
 
+    thumbDark: (data) => darkTwin(data.slug, data.thumbnail || data.cover),
+
     leadImage: (data) => {
-      if (data.lead === false) return null;
+      // showThumbnail: false is the plain yes/no switch. `lead: false` does
+      // the same thing and is kept so older posts keep working.
+      if (data.showThumbnail === false || data.lead === false) return null;
       return data.lead || data.thumbnail || data.cover || null;
+    },
+
+    leadDark: (data) => {
+      if (data.lead === false) return null;
+      return darkTwin(data.slug, data.lead || data.thumbnail || data.cover);
     },
 
     leadAltText: (data) =>

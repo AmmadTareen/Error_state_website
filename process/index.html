@@ -32,11 +32,11 @@
       <img class="brand__logo brand__mark is-dark" src="/assets/brand/mark-dark.svg" alt="" aria-hidden="true" width="21" height="21">
     </a>
     <nav class="nav" aria-label="Main">
+      <a href="/about/">About</a>
       <a href="/work/">Work</a>
       <a href="/services/">Services</a>
       <a href="/process/" aria-current="page">Process</a>
       <a href="/blog/">Blog</a>
-      <a href="/about/">About</a>
     </nav>
     <button class="menu-btn" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
       <span class="menu-ico" aria-hidden="true"></span>
@@ -53,11 +53,11 @@
   </div>
 </header>
 <div class="menu" id="menu">
+  <a href="/about/">About</a>
   <a href="/work/">Work</a>
   <a href="/services/">Services</a>
   <a href="/process/">Process</a>
   <a href="/blog/">Blog</a>
-  <a href="/about/">About</a>
 </div>
 
 <main id="main">
@@ -75,7 +75,7 @@
   <section class="section" style="padding-top:0">
     <div class="wrap">
 
-      <article class="pstep reveal">
+      <article class="pstep reveal" data-ink-fill>
         <div class="pstep__h">
           <span class="pstep__n">Step 1</span>
           <span class="cap">30 minutes</span>
@@ -93,7 +93,7 @@
         </div>
       </article>
 
-      <article class="pstep reveal">
+      <article class="pstep reveal" data-ink-fill>
         <div class="pstep__h">
           <span class="pstep__n">Step 2</span>
           <span class="cap">60 minutes</span>
@@ -112,7 +112,7 @@
         </div>
       </article>
 
-      <article class="pstep reveal">
+      <article class="pstep reveal" data-ink-fill>
         <div class="pstep__h">
           <span class="pstep__n">Step 3</span>
           <span class="cap">within 48 hours</span>
@@ -120,14 +120,16 @@
         <div class="pstep__b">
           <h2 class="d3">The template comes back filled in, not filled in live</h2>
           <p class="body" style="margin-top:12px;max-width:64ch">We complete the onboarding template after the call and send it with a Loom walking through every section. If you want to go through it together, there is a second call available.</p>
-          <!-- PLACEHOLDER MEDIA. See MEDIA.md -->
-          <div class="shot" style="margin-top:24px;min-height:clamp(180px,24vw,300px)">
-            <p><span class="cap">Placeholder</span>A real Loom still. Captions on, no autoplay. 1600 x 900.</p>
+          <!-- The live board, pannable in place. It renders only while the file
+               is shared as "anyone with the link can view". -->
+          <div class="pstep__embed">
+            <iframe src="https://embed.figma.com/board/eaT0HCpbHfIOPltjwxNyqW/Onboarding-Call-Template?node-id=0-1&amp;embed-host=share"
+              title="The onboarding call template, FigJam board" width="800" height="450" loading="lazy" allowfullscreen></iframe>
           </div>
         </div>
       </article>
 
-      <article class="pstep reveal">
+      <article class="pstep reveal" data-ink-fill>
         <div class="pstep__h">
           <span class="pstep__n">Step 4</span>
           <span class="cap">every week</span>
@@ -143,7 +145,7 @@
         </div>
       </article>
 
-      <article class="pstep reveal">
+      <article class="pstep reveal" data-ink-fill>
         <div class="pstep__h">
           <span class="pstep__n">Step 5</span>
           <span class="cap">handoff</span>
@@ -175,9 +177,9 @@
   </section>
 
   <section class="section cta">
-    <div class="wrap">
+    <div class="wrap" data-ink-fill>
       <p class="eyebrow">next step</p>
-      <h2 class="d2">Start with the 30 minute call</h2>
+      <h2 class="d2"><span class="ink-fill">Start with the 30 minute call</span></h2>
       <p class="lede" style="max-width:56ch;margin:18px auto 0">We tell you on the call if it is not a fit.</p>
       <a class="btn btn--primary" href="/book/?from=process_end" data-book="process_end">Book a 30 minute call</a>
     </div>

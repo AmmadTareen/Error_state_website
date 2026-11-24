@@ -1,6 +1,9 @@
 <a class="pcard" href="{{ post.url }}" data-tags="{{ post.data.tags | join(",") }}">
   <span class="pcard__fig">
-    <img src="/blog/images/{{ post.data.slug }}/{{ post.data.thumb }}" alt="{{ post.data.thumbAlt }}" loading="lazy" decoding="async" width="1280" height="720">
+    <img class="{% if post.data.thumbDark %}img-light{% endif %}" src="/blog/images/{{ post.data.slug }}/{{ post.data.thumb }}" alt="{{ post.data.thumbAlt }}" loading="lazy" decoding="async" width="1280" height="720">
+    {%- if post.data.thumbDark %}
+    <img class="img-dark" src="/blog/images/{{ post.data.slug }}/{{ post.data.thumbDark }}" alt="{{ post.data.thumbAlt }}" loading="lazy" decoding="async" width="1280" height="720">
+    {%- endif %}
   </span>
   <span class="pcard__body">
     <span class="pcard__tags">

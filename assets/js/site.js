@@ -50,7 +50,12 @@
     // as fast on a 120Hz screen as on 60Hz, and any dropped frame made the
     // page lurch to catch up. This settles at the same rate on every display.
     // RATE 0.125 at 60fps; the exponent rescales it to the real frame time.
-    var RATE = 0.125, STEP = 100;                 // STEP: one line-mode notch
+    // RATE is the everyday feel, for the wheel. ANCHOR is deliberately slower:
+    // a contents click can cross thousands of pixels, and at wheel speed the
+    // page arrives before the reader has registered that it moved. `rate` is
+    // whichever one the current glide is using, and it falls back to RATE the
+    // moment the glide settles or the wheel takes over.
+    var RATE = 0.125, ANCHOR = 0.05, rate = 0.125, STEP = 100;   // STEP: one line-mode notch
     var root = document.documentElement;
 
     // CSS asks for smooth anchor scrolling. Left on, every scrollTo below
@@ -66,9 +71,10 @@
       last = now;
       var d = target - current;
       if (Math.abs(d) < 0.5) {
-        current = target; running = false; last = 0; window.scrollTo(0, current); return;
+        current = target; running = false; last = 0; rate = RATE;
+        window.scrollTo(0, current); return;
       }
-      current += d * (1 - Math.pow(1 - RATE, dt / 16.667));
+      current += d * (1 - Math.pow(1 - rate, dt / 16.667));
       window.scrollTo(0, current);
       requestAnimationFrame(frame);
     }
@@ -87,6 +93,7 @@
       var ns = e.target.closest && e.target.closest("[data-native-scroll]");
       if (ns && ns.scrollWidth > ns.clientWidth + 1) return;
       e.preventDefault();
+      rate = RATE;                                   // the wheel is always direct
       var dy = e.deltaMode === 1 ? e.deltaY * STEP : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
       // Reversing direction mid glide starts from where the page is, not from
       // a target that may still be hundreds of pixels ahead.
@@ -107,6 +114,7 @@
       var head = document.querySelector(".hdr");
       var off = head ? head.getBoundingClientRect().height : 0;
       target = Math.max(0, Math.min(limit(), window.scrollY + el.getBoundingClientRect().top - off - 12));
+      rate = ANCHOR;
       start();
       if (history.replaceState) history.replaceState(null, "", id);
     });
@@ -241,14 +249,28 @@
      the fold, so if it never runs the page still reads. */
   var reveals = document.querySelectorAll(".reveal");
   if (!reduce && "IntersectionObserver" in window) {
+    var STAGGER = 0.09;          // seconds between items that arrive together
     var ro = new IntersectionObserver(function (entries) {
+      var n = 0;
       entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.classList.add("is-in"); ro.unobserve(en.target); }
+        if (!en.isIntersecting) return;
+        // several blocks often cross the line in the same frame. They come in
+        // one after another rather than as one slab, and a block arriving on
+        // its own keeps its delay at zero.
+        if (n) en.target.style.transitionDelay = (n * STAGGER).toFixed(2) + "s";
+        n++;
+        en.target.classList.add("is-in");
+        ro.unobserve(en.target);
       });
     }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
     var vh = window.innerHeight;
     reveals.forEach(function (el) {
-      if (el.getBoundingClientRect().top > vh * 0.92) el.classList.add("is-armed");
+      // a service row is armed wherever it sits, so the first one plays on
+      // arrival instead of being there already. Everything else is armed only
+      // below the fold, so nothing in view is ever hidden.
+      if (el.classList.contains("svc") || el.getBoundingClientRect().top > vh * 0.92) {
+        el.classList.add("is-armed");
+      }
       ro.observe(el);
     });
   }
@@ -362,8 +384,15 @@
   })();
 
   /* ---------- looping clips -----------------------------------------------
-     Autoplay is the default, but anyone who asked for reduced motion gets the
-     poster frame instead, and a clip off screen is not worth decoding. */
+     Every clip plays as it scrolls into view and pauses once it leaves, so a
+     clip off screen is not worth decoding. It restarts from the first frame
+     each time it comes back, which is what a reader expects of something that
+     used to be a GIF: you always catch it from the top.
+
+     A browser can still refuse to start one, on low power mode above all. The
+     refusal is caught, the clip is parked, and the first scroll, tap or key
+     press on the page starts every parked clip that is on screen. Anyone who
+     asked for reduced motion gets the poster frame and nothing moves. */
   (function () {
     var clips = [].slice.call(document.querySelectorAll("video[data-loop]"));
     if (!clips.length) return;
@@ -371,11 +400,49 @@
       clips.forEach(function (v) { v.removeAttribute("autoplay"); v.pause(); });
       return;
     }
-    if (!("IntersectionObserver" in window)) return;
+
+    var blocked = [];
+    var armed = false;
+
+    function start(v) {
+      if (v.currentTime > 0.05) { try { v.currentTime = 0; } catch (e) {} }
+      var p = v.play();
+      if (p && p.catch) {
+        p.catch(function () {
+          if (blocked.indexOf(v) < 0) blocked.push(v);
+          arm();
+        });
+      }
+    }
+
+    function retry() {
+      var still = [];
+      blocked.forEach(function (v) {
+        var b = v.getBoundingClientRect();
+        if (b.top < window.innerHeight && b.bottom > 0) {
+          var p = v.play();
+          if (p && p.catch) p.catch(function () { still.push(v); });
+        } else { still.push(v); }
+      });
+      blocked = still;
+    }
+
+    function arm() {
+      if (armed) return;
+      armed = true;
+      ["pointerdown", "touchstart", "keydown", "scroll"].forEach(function (e) {
+        window.addEventListener(e, retry, { passive: true });
+      });
+    }
+
+    if (!("IntersectionObserver" in window)) {
+      clips.forEach(start);
+      return;
+    }
     var vo = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.play().catch(function () {}); }
-        else { en.target.pause(); }
+        if (en.isIntersecting) start(en.target);
+        else en.target.pause();
       });
     }, { threshold: 0.15 });
     clips.forEach(function (v) { vo.observe(v); });
@@ -609,4 +676,129 @@
   window.addEventListener("popstate", function (e) {
     apply((e.state && e.state.tag) || "all", false);
   });
+})();
+
+/* Case study contents rail.
+   Built from the page's own sections, so it can never drift out of step with
+   the content: rename a section and the link renames itself. A page opts in
+   with <main data-toc>. Anchor clicks are already eased by the smooth scroll
+   loop above, so this only has to build the list, place it, and track the
+   reading position. */
+(function () {
+  var main = document.querySelector("main[data-toc]");
+  if (!main) return;
+
+  var items = [];
+  [].forEach.call(main.children, function (sec) {
+    if (sec.tagName !== "SECTION" || sec.classList.contains("cta")) return;
+    var eyebrow = sec.querySelector(".eyebrow");
+    if (!eyebrow) return;
+    var label = (eyebrow.textContent || "").trim();
+    if (!label) return;
+    if (!sec.id) {
+      sec.id = "s-" + label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
+    items.push({ el: sec, label: label });
+  });
+  if (items.length < 3) return;
+
+  var nav = document.createElement("nav");
+  nav.className = "toc";
+  nav.setAttribute("aria-label", "On this page");
+
+  var inner = document.createElement("div");
+  inner.className = "toc__in";
+
+  var head = document.createElement("p");
+  head.className = "toc__h";
+  head.textContent = "Contents";
+  inner.appendChild(head);
+
+  var list = document.createElement("ol");
+  var links = items.map(function (item) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + item.el.id;
+    a.textContent = item.label;
+    li.appendChild(a);
+    list.appendChild(li);
+    return a;
+  });
+  inner.appendChild(list);
+  nav.appendChild(inner);
+  main.insertBefore(nav, main.firstChild);
+
+  /* The Contents label sits level with the page eyebrow and holds that line
+     for the whole page: the track starts there and the sticky offset matches
+     it, so there is no travel. The two labels are different sizes, so the
+     first text line of each is matched rather than the box tops. Measured
+     rather than hard coded, and remeasured whenever the hero reflows. */
+  var anchor = main.querySelector(".page-top .eyebrow") ||
+               main.querySelector(".page-top .lede") ||
+               main.querySelector(".page-top h1");
+
+  function lineShift(a, b) {
+    // half the difference in line box height, which lands the two single
+    // line labels on the same optical line whatever their font sizes are
+    var ah = parseFloat(getComputedStyle(a).lineHeight) || a.offsetHeight;
+    var bh = parseFloat(getComputedStyle(b).lineHeight) || b.offsetHeight;
+    return (ah - bh) / 2;
+  }
+
+  /* the track ends 24px above the closing block, so the list comes to rest
+     before the call to action rather than running alongside it */
+  var stop = main.querySelector(".cta");
+  var STOP_GAP = 24;
+
+  function place() {
+    if (!anchor) return;
+    nav.style.top = "";
+    inner.style.top = "";
+    var docY = anchor.getBoundingClientRect().top + window.pageYOffset +
+               lineShift(anchor, head);
+    var mainY = main.getBoundingClientRect().top + window.pageYOffset;
+    nav.style.top = Math.max(0, Math.round(docY - mainY)) + "px";
+    inner.style.top = Math.round(docY) + "px";
+    if (stop) {
+      var mainEnd = main.getBoundingClientRect().bottom + window.pageYOffset;
+      var stopY = stop.getBoundingClientRect().top + window.pageYOffset;
+      nav.style.bottom = Math.max(0, Math.round(mainEnd - stopY + STOP_GAP)) + "px";
+    }
+  }
+
+  var header = document.querySelector(".hdr");
+  var offset = (header ? header.offsetHeight : 84) + 120;
+  var current = -1;
+  var queued = false;
+
+  function sync() {
+    queued = false;
+    var y = window.pageYOffset + offset;
+    var next = 0;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].el.getBoundingClientRect().top + window.pageYOffset <= y) next = i;
+    }
+    // the last section rarely reaches the top of the window, so the foot of
+    // the page always marks the final entry
+    if (window.innerHeight + window.pageYOffset >= document.body.scrollHeight - 2) {
+      next = items.length - 1;
+    }
+    if (next === current) return;
+    if (current > -1) links[current].removeAttribute("aria-current");
+    links[next].setAttribute("aria-current", "true");
+    current = next;
+  }
+
+  function onScroll() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(sync);
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", function () { place(); onScroll(); }, { passive: true });
+  if ("ResizeObserver" in window) new ResizeObserver(place).observe(main);
+
+  place();
+  sync();
 })();

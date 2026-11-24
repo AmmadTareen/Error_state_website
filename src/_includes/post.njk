@@ -26,7 +26,10 @@ ogType: article
 
       {%- if leadImage %}
       <figure class="post__cover">
-        <img src="{{ site.url }}/blog/images/{{ slug }}/{{ leadImage }}" alt="{{ leadAltText }}" width="1280" height="720" decoding="async">
+        <img class="{% if leadDark %}img-light{% endif %}" src="/blog/images/{{ slug }}/{{ leadImage }}" alt="{{ leadAltText }}" width="1280" height="720" decoding="async">
+        {%- if leadDark %}
+        <img class="img-dark" src="/blog/images/{{ slug }}/{{ leadDark }}" alt="{{ leadAltText }}" width="1280" height="720" decoding="async">
+        {%- endif %}
       </figure>
       {%- endif %}
 
@@ -43,9 +46,9 @@ ogType: article
 </section>
 
 <section class="section cta">
-  <div class="wrap">
+  <div class="wrap" data-ink-fill>
     <p class="eyebrow">next step</p>
-    <h2 class="d2">Put this to work on your product</h2>
+    <h2 class="d2"><span class="ink-fill">Put this to work on your product</span></h2>
     <p class="lede" style="max-width:56ch;margin:18px auto 0">Thirty minutes, and we tell you on the call if it is not a fit.</p>
     <a class="btn btn--primary" href="/book/?from=blog" data-book="blog">Book a 30 minute call</a>
   </div>

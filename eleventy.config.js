@@ -91,12 +91,22 @@ module.exports = function (eleventyConfig) {
    * Posts still reference their media relatively, which keeps the Markdown
    * portable, and this rewrites those paths at build.
    */
-  eleventyConfig.addFilter("absoluteMedia", (html, slug) =>
-    String(html || "")
-      .replace(/src="images\//g, `src="${SITE}/blog/images/${slug}/`)
-      .replace(/src="\/blog\//g, `src="${SITE}/blog/`)
-      .replace(/href="\/(?!\/)/g, `href="${SITE}/`)
-  );
+  /**
+   * Media in a post body is written as a bare filename, the same way the
+   * thumbnail is. This expands it to a root relative path.
+   *
+   * Root relative, not absolute: an absolute URL always points at the live
+   * domain, so the image 404s on a deploy preview, on a branch deploy, and any
+   * time production is behind. Relative resolves against whatever host is
+   * serving the page, which is correct everywhere.
+   */
+  eleventyConfig.addFilter("absoluteMedia", (html, slug) => {
+    const base = `/blog/images/${slug}/`;
+    return String(html || "").replace(
+      /src="([^"/:]+\.(?:png|jpe?g|gif|webp|avif|svg|mp4|webm))"/gi,
+      (_, file) => `src="${base}${file}"`
+    ).replace(/src="images\//g, `src="${base}`);
+  });
 
   eleventyConfig.addFilter("absoluteUrl", (path) =>
     String(path || "").startsWith("http") ? path : `${SITE}${path}`

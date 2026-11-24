@@ -64,6 +64,7 @@
   --rail:clamp(0px,9vw,180px);   /* sets the text measure, nothing is drawn on it */
   --r:14px;
   --btn-r:9px;
+  --card-pad:clamp(22px,2.2vw,28px);   /* the inset on a phase, decision or before and after card */
   --section-y:clamp(72px,9vw,132px);
 }
 
@@ -256,6 +257,55 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .hide-xs{display:inline}
 .menu{display:none}
 
+/* --- coming soon ---------------------------------------------------------- */
+/* The case studies that are not written yet. The page says so plainly, and the
+   mark doubles as the loader: eight squares lighting in sequence, over a bar
+   that creeps to the same place every time and stops there. */
+/* the page is one screen: the block takes the fold the header leaves, and its
+   content sits in the middle of it, so the footer starts below the fold rather
+   than halfway up it. svh is the small viewport, which is the stable one on a
+   phone where the browser chrome comes and goes. */
+.soon{min-height:calc(100vh - var(--header-h));min-height:calc(100svh - var(--header-h));
+  display:grid;align-content:center}
+.soon .wrap{text-align:center}
+.soon h1,.soon .lede{margin-inline:auto}
+.soon__fig{display:grid;place-items:center;gap:18px;margin-top:clamp(34px,5vw,52px)}
+.soon__mark{width:clamp(48px,6vw,64px);height:clamp(48px,6vw,64px);display:block}
+.soon__mark rect{fill:var(--ink-mute);opacity:.3;
+  animation:soonPulse 2.4s ease-in-out infinite}
+.soon__mark rect:nth-child(1){animation-delay:0s}
+.soon__mark rect:nth-child(2){animation-delay:.12s}
+.soon__mark rect:nth-child(3){animation-delay:.24s}
+.soon__mark rect:nth-child(4){animation-delay:.36s}
+.soon__mark rect:nth-child(5){animation-delay:.48s}
+.soon__mark rect:nth-child(6){animation-delay:.60s}
+.soon__mark rect:nth-child(7){animation-delay:.72s}
+.soon__mark rect:nth-child(8){animation-delay:.84s}
+@keyframes soonPulse{
+  0%,62%,100%{fill:var(--ink-mute);opacity:.3}
+  28%{fill:var(--red-pure);opacity:1}
+}
+.soon__bar{width:min(300px,64vw);height:4px;border-radius:999px;
+  background:var(--chip);overflow:hidden}
+.soon__bar i{display:block;height:100%;width:6%;background:var(--red);
+  animation:soonFill 5.6s cubic-bezier(.3,0,.15,1) infinite}
+/* it stalls at 68 and starts over, which is the joke and also the truth */
+@keyframes soonFill{0%{width:6%}62%{width:68%}88%{width:68%}100%{width:6%}}
+.soon__cap{font-family:var(--font-accent);font-size:12px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3)}
+.soon__cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+  margin-top:clamp(30px,4vw,44px)}
+@media (prefers-reduced-motion:reduce){
+  .soon__mark rect{animation:none}
+  .soon__mark rect:nth-child(2n){fill:var(--red-pure);opacity:1}
+  .soon__bar i{animation:none;width:68%}
+}
+
+/* a row for work that is not readable yet. The label keeps its reading colour,
+   ink-mute is a non text grey, and only the red on hover is dropped: the words
+   say which one is live, the hover no longer promises a case study */
+.wrow--soon:hover .wrow__go{color:var(--ink-3)}
+
 /* --- hero ---------------------------------------------------------------- */
 .hero{position:relative;overflow:hidden;padding-top:clamp(56px,7vw,96px);padding-bottom:0;z-index:2}
 .hero__sky{position:absolute;left:0;right:0;top:0;height:100%;z-index:0}
@@ -271,6 +321,26 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
     rgba(var(--scrim),.30) 58%,
     rgba(var(--scrim),.66) 82%,
     var(--bg) 100%)}
+/* Dark mode dims the plate evenly instead of pooling black at the top and
+   behind the type. One flat level across the whole sky: the clouds keep their
+   shape, nothing reads as an overlay, and the foot still fades into the page.
+   The level is what the type needs, not a look: a bright cloud lands near
+   (216,231,228), and 58% black over it leaves white type at about 6:1. */
+[data-theme="dark"] .hero__sky::after{
+  background:linear-gradient(180deg,
+    rgba(var(--scrim),.58) 0%,
+    rgba(var(--scrim),.58) 74%,
+    var(--bg) 100%)}
+/* no wash behind the type: the even level above does that work now. The lede
+   goes to the page ink, which carries on a dimmed sky where the muted grey
+   would not. */
+[data-theme="dark"] .hero__in::before{display:none}
+[data-theme="dark"] .hero .lede{color:var(--ink)}
+[data-theme="dark"] .hero h1,
+[data-theme="dark"] .hero .lede,
+[data-theme="dark"] .hero .eyebrow{
+  text-shadow:0 1px 2px rgba(0,0,0,.45)}
+
 .hero__grid{position:absolute;inset:0;z-index:0;opacity:.5;
   background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
   background-size:clamp(90px,9vw,150px) clamp(90px,9vw,150px);
@@ -507,7 +577,14 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .steps__lede--after{display:none}
 .step .d3{display:block;font-weight:700;font-size:clamp(21px,1.9vw,26px);letter-spacing:-.025em;line-height:1.04}
 .step .body{display:block;margin-top:10px;color:var(--ink-2);font-size:15px;line-height:1.6}
-.step:not(.is-on):hover .pill{background:var(--line)}
+/* Hover on a step that is not open. It used to tint the chip with --line,
+   which in dark mode is the same value as --chip, so the row answered the
+   pointer with nothing at all. The tint is mixed from the page ink instead, so
+   it reads in both themes, and the row itself lifts rather than only the chip. */
+.step:not(.is-on):hover{background:var(--line-soft)}
+.step:not(.is-on):hover{background:color-mix(in srgb, var(--ink) 5%, transparent)}
+.step:not(.is-on):hover .pill{background:var(--line);color:var(--ink)}
+.step:not(.is-on):hover .pill{background:color-mix(in srgb, var(--ink) 14%, transparent)}
 .steps__list .is-on{background:var(--surface);border-radius:var(--r);box-shadow:0 20px 50px -40px rgba(var(--shadow),.38)}
 .step:focus-visible{outline-offset:-3px}
 .pill{display:inline-block;font-size:14px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
@@ -672,15 +749,16 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
    the lines end to end: sizing the red layer from 0 to 100% fills line one left
    to right, then line two. --fill is set from scroll position in site.js. */
 .ink-fill{
-  --fill:0%;
   color:transparent;-webkit-text-fill-color:transparent;
   background-image:linear-gradient(var(--red),var(--red)),linear-gradient(var(--ink),var(--ink));
-  background-size:var(--fill) 100%,100% 100%;
+  background-size:var(--fill,0%) 100%,100% 100%;
   background-repeat:no-repeat;
   -webkit-background-clip:text;background-clip:text;
   -webkit-box-decoration-break:slice;box-decoration-break:slice;
 }
-@media (prefers-reduced-motion:reduce){ .ink-fill{--fill:100%} }
+/* nothing animates, so the fill is simply done: the block carries it too, for
+   the button that reads the same variable */
+@media (prefers-reduced-motion:reduce){ .ink-fill,[data-ink-fill]{--fill:100%} }
 
 /* faq */
 .faq{border-top:1px solid var(--line)}
@@ -695,6 +773,23 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* closing cta */
 .cta{text-align:center;border-top:1px solid var(--line);padding-block:clamp(80px,10vw,150px);position:relative;z-index:2}
 .cta .btn{margin-top:30px}
+/* the button fills with the headline above it. --fill is set on the block, so
+   one scroll position drives both, and the red runs left to right over the
+   button's own ground. Without a filled headline the layer is 0% wide and the
+   button is the plain one. --fill-red is the red that carries this button's
+   label: Red-50 under the white label in light, and in dark the lighter Red-40,
+   because there the label is near black and Red-50 would leave it at 3.8:1. */
+.cta .btn--primary{
+  --fill-red:var(--red-fill);
+  background-image:linear-gradient(var(--fill-red),var(--fill-red));
+  background-size:var(--fill,0%) 100%;background-repeat:no-repeat;
+  /* the button carries a 1px transparent border. A background image is laid
+     inside it by default, so the ground behind it showed as a ring around the
+     fill, white in dark mode. The layer is laid over the border instead. */
+  background-origin:border-box;
+  transition:background-size .1s linear,background-color .18s ease,
+             padding .18s cubic-bezier(.2,.7,.3,1)}
+[data-theme="dark"] .cta .btn--primary{--fill-red:var(--red)}   /* 4.5:1 on Grey-90 */
 
 /* footer */
 .ftr{border-top:1px solid var(--line);background:var(--surface);padding-block:clamp(48px,5vw,72px) 28px;position:relative;z-index:2}
@@ -772,31 +867,81 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* labels run to one or two lines, so reserve two and the figures share a line */
 @media (min-width:1024px){ .stats3 .cap{min-height:2.6em} }
 
+/* ==========================================================================
+   Mock frames, scaled to the window
+   A mock is framed at 1280 by 824, so at full column width it fills most of a
+   13 inch screen. The stacks below are capped by window height instead: the
+   frame is allowed about two thirds of the screen, and the card is whatever
+   width that height makes, centred in the column. Nothing is cropped, the
+   whole mock stays visible, and on a tall screen the cap never bites.
+   ========================================================================== */
+:root{--frame-h:clamp(300px,70vh,760px);--mock-ground:#FEF0F0;--mock-pad:64px;
+  --mock-line:#242424;                     /* the stroke around a mock, both themes */
+  --mock-stroke:clamp(4px,0.8vw,10px);     /* it scales: 10px reads heavy on a phone */
+  --mock-pad-x:clamp(20px,4vw,64px)}       /* ground either side of a mock */
+/* the palest red is a near white, which glares beside a dark card. Dark mode
+   takes the same tint from the other end: a deep red brown, close enough to
+   the card that the mock stays the bright thing in it */
+[data-theme="dark"]{--mock-ground:#130606}
+/* The cards keep the full column width, so they line up with every other
+   section. It is the frame inside them that is capped, and the mock fills it
+   from the top, so a tall capture gives up its foot rather than the card
+   giving up width. Open full size still shows the whole thing. */
+/* width is set rather than left automatic: with an aspect ratio in play a
+   max-height is otherwise transferred back into a max-width, and the card
+   narrows instead of the frame getting shorter */
+/* a live board is framed by its own ratio; the width cap is what keeps its
+   height under --frame-h, since a max-height on a box that has an aspect ratio
+   is handed back to the width anyway */
+.phase__embed,.dec__embed{width:100%;
+  max-width:calc(var(--frame-h) * 1280 / 824);margin-inline:auto}
+
+/* The frame is a band of ground with the mock centred on it: 64px above and
+   below, and the stroke's width either side so the outline has room. It takes
+   its height from the mock, which is the only thing here carrying a ratio. */
+.phase__fig,.dec__fig,.ba__fig{
+  display:grid;justify-items:center;width:100%;
+  padding:var(--mock-pad) var(--mock-pad-x)}
+
+/* The mock holds the ratio itself, so its box can never be stretched by the
+   frame around it, at any width. The cap is expressed as a width, which is the
+   same thing as capping the height once the ratio is fixed: at --frame-h times
+   1280/824 the mock is exactly --frame-h tall. Below that the mock is as wide
+   as the card and the ground does not show. */
+.phase__fig img,.dec__fig img,.dec__video video,.ba__fig img,.ba__fig svg,.ba__fig video{
+  width:100%;height:auto;aspect-ratio:1280 / 824;
+  max-width:calc(var(--frame-h) * 1280 / 824);
+  border-radius:var(--r);
+  /* an outline rather than a border: it is drawn outside the box, so the mock
+     keeps its full size and the stroke sits on the ground around it */
+  outline:var(--mock-stroke) solid var(--mock-line);outline-offset:0}
+
 /* decisions: chose X, over Y, because Z. Three across, stacking below 900. */
 /* Decisions run as stacked cards, same pattern as the phases above: the number
    inline with the title, the alternative under it, the reason under that, then
    the mock filling the rest of the card. */
-/* one card, with the three decisions divided by a band of the page ground and
-   a hairline either side, so each block reads as its own without becoming a
-   separate card */
-.decs{display:grid;grid-template-columns:1fr;gap:12px;background:var(--bg);
-  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.decs > div{background:var(--surface)}
-.decs > div + div{border-top:1px solid var(--line)}
-.decs > div:not(:last-child){border-bottom:1px solid var(--line)}
-.decs .dec__ttl,.decs .over,.decs .why{padding-inline:clamp(18px,1.9vw,24px)}
-.decs .dec__ttl{display:flex;align-items:baseline;gap:12px;padding-top:clamp(18px,1.9vw,24px);
+/* three cards in the same frame as the phases above, stacked with the same
+   gap. The order is flipped: the mock on top, the copy under it. */
+.decs{display:grid;grid-template-columns:1fr;gap:16px}
+.decs > div{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  background:var(--surface)}
+.decs .dec__ttl,.decs .over,.decs .why{padding-inline:var(--card-pad)}
+.decs .dec__ttl{display:flex;align-items:baseline;gap:12px;padding-top:var(--card-pad);
   font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
-.decs .dec__ttl .n{color:var(--red);font-variant-numeric:tabular-nums}
-.decs .over{margin-top:8px;font-size:14px;color:var(--ink-3)}
+/* the number is given a fixed box so the line under the title can line up
+   with the title itself rather than with the number, whatever the font does */
+.decs .dec__ttl .n{color:var(--red);font-variant-numeric:tabular-nums;
+  flex:0 0 auto;min-width:22px}
+.decs .over{margin-top:4px;font-size:14px;color:var(--ink-3);
+  padding-left:calc(var(--card-pad) + 22px + 12px)}   /* number box plus the row gap */
 .decs .over b{font-weight:600;color:var(--ink-2)}
-.decs .why{margin-top:10px;padding-bottom:clamp(18px,1.9vw,24px);font-size:15px;color:var(--ink-2);max-width:74ch}
+.decs .why{margin-top:10px;padding-bottom:var(--card-pad);font-size:15px;color:var(--ink-2);max-width:74ch}
 /* the mock for each decision, in the same frame as the phase cards above */
 /* a still in a decision, framed like everything else: a long page shows its top
    and opens full size on click */
-.dec__fig{display:block;position:relative;aspect-ratio:1280 / 824;overflow:hidden;line-height:0;
-  border-bottom:1px solid var(--line);background:#FFFFFF}
-.dec__fig img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;
+.dec__fig{display:block;position:relative;overflow:hidden;line-height:0;
+  border-bottom:1px solid var(--line);background:var(--mock-ground)}
+.dec__fig img{object-fit:cover;object-position:top center;display:block;
   transition:transform .4s cubic-bezier(.2,.7,.3,1)}
 @media (hover:hover){
   .dec__fig:hover img{transform:scale(1.02)}
@@ -804,8 +949,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 
 /* a recording in a decision, filling the same frame as the stills beside it */
-.dec__video video{width:100%;height:100%;object-fit:cover;object-position:center;display:block;
-  background:#FFFFFF}
+.dec__video video{object-fit:cover;object-position:center;display:block;
+  background:var(--mock-ground)}
 
 /* a live Figma prototype in a decision, in the same frame as the placeholders */
 .dec__embed{position:relative;aspect-ratio:1280 / 824;border-bottom:1px solid var(--line);background:var(--bg)}
@@ -829,18 +974,19 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
    cropped. */
 .phases{display:grid;grid-template-columns:1fr;gap:16px}
 .phase{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
-.phase__head{padding:clamp(18px,1.9vw,24px);border-bottom:1px solid var(--line)}
+.phase__head{padding:var(--card-pad);border-bottom:1px solid var(--line)}
 .phase__ttl{display:flex;align-items:baseline;gap:12px;
   font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
 .phase__ttl .n{color:var(--red);font-variant-numeric:tabular-nums}
 .phase__head .d{margin-top:8px;font-size:15px;color:var(--ink-2);max-width:74ch}
 .phase__head .d a{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--red-line)}
-.phase__head .d a:hover{color:var(--red);text-decoration-color:var(--red)}
+/* only the rule lights up: the label keeps its reading colour */
+.phase__head .d a:hover{text-decoration-color:var(--red)}
 /* one frame for all three phases, so the stack reads as a set rather than
    three captures that happened to be exported at slightly different heights */
-.phase__fig{display:block;position:relative;aspect-ratio:1280 / 824;
-  background:#FFFFFF;overflow:hidden;line-height:0}
-.phase__fig img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;
+.phase__fig{display:block;position:relative;
+  background:var(--mock-ground);overflow:hidden;line-height:0}
+.phase__fig img{object-fit:cover;object-position:top center;display:block;
   transition:transform .4s cubic-bezier(.2,.7,.3,1)}
 /* the live FigJam board, framed to the same proportions as the screen captures
    below it, so all three cards are the same size */
@@ -863,8 +1009,8 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .ba{display:grid;grid-template-columns:1fr;gap:16px}
 .ba > figure{margin:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);
   display:flex;flex-direction:column}
-.ba__fig{position:relative;aspect-ratio:1280 / 824;background:#FFFFFF;overflow:hidden;display:block}
-.ba__fig img,.ba__fig svg{width:100%;height:100%;display:block}
+.ba__fig{position:relative;background:var(--mock-ground);overflow:hidden;display:block}
+.ba__fig img,.ba__fig svg{display:block}
 .ba__fig img{object-fit:contain;object-position:center}   /* the whole screen, nothing cropped */
 /* The signature draws itself, holds, then resets while invisible, so the card
    reads as a document being signed rather than a static illustration. */
@@ -888,14 +1034,20 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
    hair taller than the frame, so cover takes about four source pixels off the
    top and bottom edges, which the rounded corners were hiding anyway. Contain
    would leave white down both sides instead. */
-.ba__video{background:#FFFFFF}
-.ba__video video{width:100%;height:100%;object-fit:cover;object-position:center;display:block;background:#FFFFFF}
+.ba__video{background:var(--mock-ground)}
+.ba__video video{object-fit:cover;object-position:center;display:block;
+  background:var(--mock-ground)}
 
 /* the after side can be a live prototype rather than a capture */
 .ba__embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
-.ba figcaption{padding:clamp(18px,1.9vw,24px);border-top:1px solid var(--line)}
-.ba figcaption .n{display:block;font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--red);margin-bottom:10px}
-.ba figcaption .d{display:block;font-size:14px;color:var(--ink-2)}
+.ba figcaption{padding:var(--card-pad);border-top:1px solid var(--line)}
+/* same type as a phase or decision card: the label reads as the title, the
+   line under it as the description */
+/* the label takes the title ink rather than the red, so it reads as the card
+   title: white in dark, near black in light */
+.ba figcaption .n{display:block;font-size:17px;font-weight:700;letter-spacing:-.02em;
+  line-height:1.2;color:var(--ink);margin-bottom:8px}
+.ba figcaption .d{display:block;font-size:15px;color:var(--ink-2)}
 
 
 /* media placeholder, until the real captures land */
@@ -904,12 +1056,35 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .shot p{color:var(--ink-3);font-size:14px;max-width:44ch}
 .shot .cap{display:block;margin-bottom:10px;color:var(--red)}
 
+/* a live board inside a step, framed like the ones in a case study */
+.pstep__embed{position:relative;aspect-ratio:1280 / 824;margin-top:24px;
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--bg);
+  /* the same height cap the mocks use, expressed as a width */
+  max-width:calc(var(--frame-h) * 1280 / 824)}
+.pstep__embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+
 /* process steps */
-.pstep{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:16px;background:var(--surface)}
+/* the gap between steps is wider than the band inside a card, so the eye reads
+   the break between two steps before it reads the break inside one */
+.pstep{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  margin-bottom:clamp(28px,3.4vw,48px);background:var(--surface)}
+.pstep:last-of-type{margin-bottom:0}
 .pstep__h{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;
   padding:clamp(20px,2.2vw,28px) clamp(22px,2.4vw,32px);border-bottom:1px solid var(--line);background:var(--bg)}
-.pstep__n{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--solid-ink);background:var(--solid);
-  border-radius:6px;padding:5px 10px}
+/* The chip and the step's button fill red as the step comes up the page, on
+   the same --fill the closing headline uses: one scroll position drives both,
+   and the red runs left to right over the black ground. --fill-red is the red
+   that carries the label on it, Red-50 under white in light, the lighter
+   Red-40 in dark where the label is near black. */
+.pstep__n,.pstep .btn--primary{
+  --fill-red:var(--red-fill);
+  background-image:linear-gradient(var(--fill-red),var(--fill-red));
+  background-size:var(--fill,0%) 100%;background-repeat:no-repeat;
+  background-origin:border-box}
+[data-theme="dark"] .pstep__n,[data-theme="dark"] .pstep .btn--primary{--fill-red:var(--red)}
+.pstep__n{font-size:13px;font-weight:600;letter-spacing:.06em;color:var(--solid-ink);background-color:var(--solid);
+  border-radius:6px;padding:5px 10px;transition:background-size .1s linear}
+@media (prefers-reduced-motion:reduce){ .pstep{--fill:100%} }
 .pstep__b{padding:clamp(22px,2.6vw,34px)}
 
 /* the onboarding agenda */
@@ -924,11 +1099,18 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 /* people */
 .people{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .person{border:1px solid var(--line);border-radius:var(--r);padding:clamp(22px,2.4vw,32px);background:var(--surface)}
-.person__av{width:56px;height:56px;border-radius:50%;background:var(--skeleton);position:relative;overflow:hidden;margin-bottom:18px}
-.person__av::before{content:"";position:absolute;top:10px;left:50%;width:22px;height:22px;margin-left:-11px;
-  border-radius:50%;background:var(--ink-mute);opacity:.5}
-.person__av::after{content:"";position:absolute;bottom:0;left:50%;width:40px;height:24px;margin-left:-20px;
-  border-radius:20px 20px 0 0;background:var(--ink-mute);opacity:.5}
+/* a portrait, cropped to the circle. The silhouette that used to stand in for
+   it is gone, so an img that fails to load leaves its alt text, not a face. */
+.person__av{display:block;width:72px;height:72px;border-radius:50%;
+  object-fit:cover;background:var(--skeleton);margin-bottom:18px}
+/* the name and the link to that person's LinkedIn sit on one row */
+.person__row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.person__li{display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;
+  border:1px solid var(--line);border-radius:9px;color:var(--ink-3);
+  transition:color .16s ease,border-color .16s ease,background-color .16s ease}
+.person__li svg{width:17px;height:17px;fill:currentColor}
+.person__li:hover{color:var(--surface);background:var(--ink);border-color:var(--ink)}
+.person__li:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 
 /* the booking page */
 .book{display:grid;grid-template-columns:340px 1fr;gap:0;border:1px solid var(--line);
@@ -1142,14 +1324,21 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   transition:background-color .16s ease,color .16s ease}
 .post__tags a:hover{background:var(--red-soft);color:var(--red)}
 
-.post__cover{margin:0 0 clamp(32px,4vw,52px);border:1px solid var(--line);border-radius:var(--r);
-  overflow:hidden;background:var(--surface)}
-.post__cover img{width:100%;height:auto;display:block}
+/* The opening image is capped by the height of the window rather than the
+   width of the column, so it never eats the whole first screen on a laptop.
+   The frame shrinks with it, and nothing is cropped at any size. */
+.post__cover{margin:0 auto clamp(32px,4vw,52px);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;background:var(--surface);width:fit-content;max-width:100%}
+.post__cover img{display:block;width:auto;height:auto;max-width:100%;
+  max-height:clamp(220px,52vh,620px)}
 
 /* --- the body ------------------------------------------------------------ */
 .post__body{max-width:var(--measure);margin:0 auto;font-size:17px;line-height:1.7;color:var(--ink-2)}
-.post__body > * + *{margin-top:1.1em}
-.post__body p{margin:0}
+/* One rule owns the vertical rhythm: every block gets space above it except
+   the first. `.post__body p{margin:0}` used to sit here and silently won on
+   specificity, which is why consecutive paragraphs ran together. */
+.post__body > *{margin-top:1.1em;margin-bottom:0}
+.post__body > :first-child{margin-top:0}
 .post__body strong{color:var(--ink);font-weight:600}
 .post__body em{font-style:italic}
 
@@ -1244,4 +1433,71 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 @media (prefers-reduced-motion:reduce){ .pcard:hover .pcard__fig img{transform:none} }
 
+/* a picture that ships a dark twin renders both, and the theme picks one.
+   display, not opacity, so the hidden one is out of the accessibility tree and
+   is never read out twice. The element is named in each selector: the rules
+   that size a card image or a post cover already carry a display of their own,
+   and would otherwise win. */
+img.img-dark{display:none}
+[data-theme="dark"] img.img-light{display:none}
+[data-theme="dark"] img.img-dark{display:block}
+
 .plist__empty{text-align:center;color:var(--ink-3);font-size:15px;padding:clamp(40px,6vw,80px) 0}
+
+
+/* ==========================================================================
+   Case study contents
+   Sits in the rail the layout already reserves on the left, so it costs the
+   content no width. Hidden below 1400px, where that rail is too narrow to
+   hold a label on one line. Opt a page in with <main data-toc>.
+
+   The track is an absolutely positioned column that starts at the hero lede
+   and runs to the foot of the page; the list inside it is sticky. So the list
+   scrolls up with the page from where the writing starts, then pins under the
+   header and stays there.
+   ========================================================================== */
+
+.toc{display:none}
+
+@media (min-width:1400px){
+  /* a page carrying the contents widens its own rail, so the list gets room
+     for a label on one line and a clear channel beside it. Header, main and
+     footer all read --rail, so everything stays aligned; the content column
+     just sits 56px further in. */
+  body:has(main[data-toc]){--rail:clamp(0px,calc(9vw + 56px),236px)}
+  main[data-toc]{position:relative}
+
+  .toc{
+    --toc-gap:32px;
+    display:block;position:absolute;z-index:40;
+    /* the track stops 24px short of the end of the page, so the list comes to
+       rest above the footer rather than against it */
+    top:0;bottom:24px;
+    left:max(var(--gutter),calc((100vw - var(--max)) / 2 + var(--gutter)));
+    width:calc(var(--rail) + 32px - var(--gutter) - var(--toc-gap));
+    pointer-events:none;
+  }
+  .toc__in{
+    position:sticky;top:calc(var(--header-h) + 32px);
+    pointer-events:auto;
+    max-height:calc(100vh - var(--header-h) - 64px);
+    overflow-y:auto;scrollbar-width:none;
+  }
+  .toc__in::-webkit-scrollbar{display:none}
+}
+
+/* ink-mute is a non text grey, so the label takes ink-3, which clears AA in
+   both themes at this size */
+.toc__h{font-family:var(--font-accent);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:12px;padding-left:16px}
+.toc ol{display:flex;flex-direction:column}
+.toc a{
+  display:block;position:relative;padding:8px 0 8px 16px;
+  font-size:13px;line-height:1.3;color:var(--ink-3);
+  border-left:1px solid var(--line);
+  transition:color .18s ease,border-color .18s ease;
+}
+.toc a::first-letter{text-transform:uppercase}
+.toc a:hover{color:var(--ink);border-color:var(--ink-mute)}
+.toc a[aria-current="true"]{color:var(--red);border-color:var(--red)}
+@media (prefers-reduced-motion:reduce){ .toc a{transition:none} }

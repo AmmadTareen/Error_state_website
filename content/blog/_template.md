@@ -36,9 +36,16 @@ thumbnail: "thumbnail.jpg"
 # never write "image of".
 thumbnailAlt: "What the thumbnail actually shows"
 
-# Optional. The image at the top of the post. Leave both lines out and the
-# thumbnail is used, which is the usual case. Name a different file when the
-# post opens on something else, or set `lead: false` for no image at the top.
+# Dark mode. Nothing to write here: drop a second file beside the first with
+# -dark before the extension (thumbnail.jpg and thumbnail-dark.jpg) and the
+# site shows it whenever the reader is in dark mode. The same works for the
+# lead image. With no -dark file the one image is used in both themes.
+
+# Optional. Does the thumbnail open the post? Left out, or true, it does,
+# which is the usual case. false starts the post straight on the writing.
+# showThumbnail: false
+
+# Optional. Opens the post on a different image instead of the thumbnail.
 # Every other image in the post goes in the body, not here.
 # lead: "opening-shot.jpg"
 # leadAlt: "What the opening image actually shows"
